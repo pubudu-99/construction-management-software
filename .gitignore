@@ -1,0 +1,20 @@
+# Build output
+bin/
+obj/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Database file (runtime data - not source code)
+db/
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project memory file (kept local, not for submission)
+CLAUDE.md
