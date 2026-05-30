@@ -33,7 +33,8 @@ partial class DashboardForm
     private Button btnNavUsers;
 
     // ── Main area ─────────────────────────────────────────────────────────────
-    private Panel        pnlMain;
+    private Panel             pnlMain;
+    private TableLayoutPanel  tlpCards;
     private GroupBox     grpDeadlines;
     private RichTextBox  rtbDeadlines;
     private GroupBox     grpMaintenance;
@@ -73,6 +74,7 @@ partial class DashboardForm
         btnNavReports     = new Button();
         btnNavUsers       = new Button();
         pnlMain           = new Panel();
+        tlpCards          = new TableLayoutPanel();
         grpDeadlines      = new GroupBox();
         rtbDeadlines      = new RichTextBox();
         grpMaintenance    = new GroupBox();
@@ -169,15 +171,25 @@ partial class DashboardForm
         pnlMain.Dock      = DockStyle.Fill;
         pnlMain.BackColor = Color.White;
         pnlMain.Padding   = new Padding(20);
-        pnlMain.Controls.Add(grpLowStock);
-        pnlMain.Controls.Add(grpMaintenance);
-        pnlMain.Controls.Add(grpDeadlines);
+        pnlMain.Controls.Add(tlpCards);
+
+        // Responsive card row: 3 equal columns × 1 row, fills the dashboard area
+        // and resizes automatically as the window grows.
+        tlpCards.Dock        = DockStyle.Top;
+        tlpCards.Height      = 280;
+        tlpCards.ColumnCount = 3;
+        tlpCards.RowCount    = 1;
+        tlpCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+        tlpCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+        tlpCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+        tlpCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpCards.BackColor   = Color.White;
 
         // Upcoming Deadlines
         grpDeadlines.Text     = "Upcoming Deadlines";
         grpDeadlines.Font     = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        grpDeadlines.Location = new Point(20, 20);
-        grpDeadlines.Size     = new Size(240, 160);
+        grpDeadlines.Dock     = DockStyle.Fill;
+        grpDeadlines.Margin   = new Padding(0, 0, 8, 0);
         grpDeadlines.Controls.Add(rtbDeadlines);
 
         rtbDeadlines.ReadOnly    = true;
@@ -192,8 +204,8 @@ partial class DashboardForm
         // Maintenance Due
         grpMaintenance.Text     = "Maintenance Due";
         grpMaintenance.Font     = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        grpMaintenance.Location = new Point(280, 20);
-        grpMaintenance.Size     = new Size(240, 160);
+        grpMaintenance.Dock     = DockStyle.Fill;
+        grpMaintenance.Margin   = new Padding(4, 0, 4, 0);
         grpMaintenance.Controls.Add(rtbMaintenance);
 
         rtbMaintenance.ReadOnly    = true;
@@ -208,8 +220,8 @@ partial class DashboardForm
         // Low Stock
         grpLowStock.Text     = "Low Stock";
         grpLowStock.Font     = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        grpLowStock.Location = new Point(540, 20);
-        grpLowStock.Size     = new Size(240, 160);
+        grpLowStock.Dock     = DockStyle.Fill;
+        grpLowStock.Margin   = new Padding(8, 0, 0, 0);
         grpLowStock.Controls.Add(rtbLowStock);
 
         rtbLowStock.ReadOnly    = true;
@@ -220,6 +232,11 @@ partial class DashboardForm
         rtbLowStock.DetectUrls  = false;
         rtbLowStock.Dock        = DockStyle.Fill;
         rtbLowStock.Padding     = new Padding(4, 2, 4, 2);
+
+        // Place the 3 GroupBoxes into the 3 columns (col, row).
+        tlpCards.Controls.Add(grpDeadlines,   0, 0);
+        tlpCards.Controls.Add(grpMaintenance, 1, 0);
+        tlpCards.Controls.Add(grpLowStock,    2, 0);
 
         // ── Form ──────────────────────────────────────────────────────────────
         AutoScaleMode = AutoScaleMode.Font;
