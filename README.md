@@ -3,8 +3,6 @@
 Offline Windows desktop application for small construction firms to manage
 payments, labour, equipment, materials, scheduling, and contacts.
 
-Built as the final-year ICT Project (ITE 1943) for the BIT External Degree
-programme, University of Moratuwa.
 
 ---
 
@@ -151,6 +149,3 @@ reports, and the backup confirmation.
 ## Author
 
 **Pubudu Perera**
-Student ID: E2421061
-BIT External Degree — University of Moratuwa
-Module: ITE 1943 (ICT Project), 2026
