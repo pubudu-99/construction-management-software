@@ -14,6 +14,7 @@ public partial class PayrollForm : Form
 {
     private readonly WorkerRepository     _workerRepo;
     private readonly AttendanceRepository _attendanceRepo;
+    private readonly ProjectRepository    _projectRepo;
     private readonly PayrollCalculator    _calculator;
 
     /// <summary>Holds the most recently generated report for CSV export.</summary>
@@ -24,8 +25,10 @@ public partial class PayrollForm : Form
     {
         InitializeComponent();
         GridStyle.Apply(dgvPayroll);
+        Theme.Apply(this);
         _workerRepo     = new WorkerRepository(factory);
         _attendanceRepo = new AttendanceRepository(factory);
+        _projectRepo    = new ProjectRepository(factory);
         _calculator     = new PayrollCalculator();
 
         // Default period: first day of this month → today
@@ -159,7 +162,16 @@ public partial class PayrollForm : Form
         var worker = _workerRepo.GetActive().FirstOrDefault(w => w.WorkerId == line.WorkerId);
         decimal rate = worker?.HourlyRate ?? 0m;
 
+        // Identify the receipt with the current construction project,
+        // not the application name. Falls back to a generic header if
+        // no active project exists.
+        string projectName =
+            _projectRepo.GetActive()?.Name
+            ?? _projectRepo.GetAll().FirstOrDefault()?.Name
+            ?? "";
+
         var printer = new PayrollReceiptPrinter(
+            projectName,
             line.WorkerName, dtpFrom.Value.Date, dtpTo.Value.Date,
             line.RegularHours, line.OvertimeHours,
             rate, AppConfig.OvertimeMultiplier, line.TotalPay);

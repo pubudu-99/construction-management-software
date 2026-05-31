@@ -12,14 +12,16 @@ public class ScheduleService
 {
     private readonly DbConnectionFactory _factory;
     private readonly TaskRepository      _tasks;
+    private readonly ProjectRepository   _projects;
 
     /// <summary>Initialises the service with a connection factory and task repository.</summary>
     /// <param name="factory">Connection factory used for audit logging.</param>
     /// <param name="tasks">The repository used to read and write tasks.</param>
     public ScheduleService(DbConnectionFactory factory, TaskRepository tasks)
     {
-        _factory = factory;
-        _tasks   = tasks;
+        _factory  = factory;
+        _tasks    = tasks;
+        _projects = new ProjectRepository(factory);
     }
 
     /// <summary>
@@ -48,17 +50,23 @@ public class ScheduleService
     }
 
     /// <summary>
-    /// Returns alerts for all open tasks due within 3 days (or overdue).
+    /// Returns alerts for the active project's open tasks due within 3 days
+    /// (or overdue). Returns an empty list when no project is active so the
+    /// dashboard never shows a completed project's stale deadlines.
     /// Sort order: overdue tasks first (most overdue at top),
     /// then upcoming tasks (least time remaining at top).
     /// </summary>
     /// <returns>A list of <see cref="TaskAlert"/> objects.</returns>
     public List<TaskAlert> GetDeadlineAlerts()
     {
+        var active = _projects.GetActive();
+        if (active is null)
+            return new List<TaskAlert>();
+
         var now    = DateTime.Now;
         var alerts = new List<TaskAlert>();
 
-        foreach (var task in _tasks.GetOpenTasks())
+        foreach (var task in _tasks.GetOpenTasksForProject(active.ProjectId))
         {
             int days = (task.EndDate.Date - DateTime.Today).Days;
             if (days <= 3)

@@ -277,8 +277,8 @@ partial class PaymentForm
 
         lblFrom.Text      = "From:";
         lblFrom.Font      = new Font("Segoe UI", 9F);
-        lblFrom.Location  = new Point(0, 9);
-        lblFrom.Size      = new Size(42, 22);
+        lblFrom.AutoSize  = true;
+        lblFrom.Location  = new Point(0, 11);
         lblFrom.TextAlign = ContentAlignment.MiddleLeft;
 
         dtpFrom.Format   = DateTimePickerFormat.Short;
@@ -289,8 +289,8 @@ partial class PaymentForm
 
         lblTo.Text      = "To:";
         lblTo.Font      = new Font("Segoe UI", 9F);
-        lblTo.Location  = new Point(186, 9);
-        lblTo.Size      = new Size(28, 22);
+        lblTo.AutoSize  = true;
+        lblTo.Location  = new Point(186, 11);
         lblTo.TextAlign = ContentAlignment.MiddleLeft;
 
         dtpTo.Format   = DateTimePickerFormat.Short;
@@ -299,13 +299,14 @@ partial class PaymentForm
         dtpTo.Location = new Point(218, 8);
         dtpTo.Size     = new Size(130, 24);
 
+        // Fixed size, vertically centred against the date pickers (y 8, height 24).
         btnRefresh.Text                         = "Refresh";
         btnRefresh.Font                         = new Font("Segoe UI", 9F);
         btnRefresh.FlatStyle                    = FlatStyle.Flat;
         btnRefresh.FlatAppearance.BorderColor   = Color.LightGray;
         btnRefresh.BackColor                    = Color.WhiteSmoke;
-        btnRefresh.Location                     = new Point(358, 6);
-        btnRefresh.Size                         = new Size(100, 28);
+        btnRefresh.Location                     = new Point(360, 7);
+        btnRefresh.Size                         = new Size(90, 26);
         btnRefresh.Cursor                       = Cursors.Hand;
         btnRefresh.Click                       += BtnRefresh_Click;
 

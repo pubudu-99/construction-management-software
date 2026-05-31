@@ -9,6 +9,7 @@ namespace ConstructionMS.Services;
 /// </summary>
 public class PayrollReceiptPrinter
 {
+    private readonly string   _projectName;
     private readonly string   _workerName;
     private readonly DateTime _from;
     private readonly DateTime _to;
@@ -19,6 +20,11 @@ public class PayrollReceiptPrinter
     private readonly decimal  _totalPay;
 
     /// <summary>Creates a printer holding all figures for one worker's payslip.</summary>
+    /// <param name="projectName">
+    /// Name of the construction project this payslip is issued for —
+    /// printed as the document header so the receipt is identified with
+    /// the project, not the application name.
+    /// </param>
     /// <param name="workerName">Worker's full name.</param>
     /// <param name="from">Start of the pay period (inclusive).</param>
     /// <param name="to">End of the pay period (inclusive).</param>
@@ -27,11 +33,13 @@ public class PayrollReceiptPrinter
     /// <param name="hourlyRate">Worker's hourly rate (LKR).</param>
     /// <param name="overtimeMultiplier">Overtime rate multiplier (e.g. 1.5).</param>
     /// <param name="totalPay">Gross pay for the period (LKR).</param>
-    public PayrollReceiptPrinter(string workerName, DateTime from, DateTime to,
+    public PayrollReceiptPrinter(string projectName,
+                                 string workerName, DateTime from, DateTime to,
                                  decimal regularHours, decimal overtimeHours,
                                  decimal hourlyRate, decimal overtimeMultiplier,
                                  decimal totalPay)
     {
+        _projectName        = projectName;
         _workerName         = workerName;
         _from               = from;
         _to                 = to;
@@ -49,7 +57,13 @@ public class PayrollReceiptPrinter
     /// <returns>A ready-to-preview/print document.</returns>
     public PrintDocument Build()
     {
-        var doc = new PrintDocument { DocumentName = $"Payroll Receipt - {_workerName}" };
+        // The document name shows up in the print queue and as the default
+        // file name when saving via "Microsoft Print to PDF". Include the
+        // project so multiple project receipts are easy to tell apart.
+        var doc = new PrintDocument
+        {
+            DocumentName = $"{_projectName} - Payroll Receipt - {_workerName}"
+        };
         doc.PrintPage += DrawPage;
         return doc;
     }
@@ -70,8 +84,15 @@ public class PayrollReceiptPrinter
         using var footFont   = new Font("Segoe UI", 8F, FontStyle.Italic);
         using var center     = new StringFormat { Alignment = StringAlignment.Center };
 
-        // ── Company header (centered, bold) ──
-        g.DrawString("CONSTRUCTION MANAGEMENT SOFTWARE", headerFont, Brushes.Black,
+        // ── Document header (project name on top, then "Payroll Receipt") ──
+        // The project this payslip is issued for, rather than the application's
+        // own name — that's what construction staff actually need to see on
+        // a printed/saved receipt.
+        string header = string.IsNullOrWhiteSpace(_projectName)
+            ? "PAYROLL RECEIPT"
+            : _projectName.ToUpperInvariant();
+
+        g.DrawString(header, headerFont, Brushes.Black,
                      new RectangleF(left, y, width, headerFont.GetHeight(g) + 4), center);
         y += headerFont.GetHeight(g) + 6;
         g.DrawString("Payroll Receipt", subFont, Brushes.Black,

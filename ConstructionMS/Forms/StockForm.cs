@@ -32,6 +32,7 @@ public partial class StockForm : Form
         InitializeComponent();
         GridStyle.Apply(dgvMaterials);
         GridStyle.Apply(dgvMovements);
+        Theme.Apply(this);
         Load += StockForm_Load;
     }
 

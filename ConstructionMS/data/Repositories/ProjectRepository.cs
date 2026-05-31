@@ -46,7 +46,7 @@ public class ProjectRepository
         using var cmd = conn.CreateCommand();
         cmd.Transaction = tx;
         cmd.CommandText = @"
-            SELECT ProjectId, Name, Budget, Spent, StartDate, EndDate
+            SELECT ProjectId, Name, Budget, Spent, StartDate, EndDate, Status, CompletedDate
             FROM   Projects
             WHERE  ProjectId = $id
             LIMIT  1;
@@ -82,16 +82,18 @@ public class ProjectRepository
     }
 
     /// <summary>
-    /// Returns the project with the lowest <c>ProjectId</c>, or <c>null</c> if
-    /// no projects exist. Used by forms that need a default project to work with.
+    /// Returns the single project whose <c>Status</c> is <c>'Active'</c>, or
+    /// <c>null</c> if no active project exists (e.g. all projects are completed,
+    /// or the database is empty). At most one project is ever active.
     /// </summary>
-    /// <returns>The first <see cref="Project"/>, or <c>null</c>.</returns>
-    public Project? GetFirst()
+    /// <returns>The active <see cref="Project"/>, or <c>null</c>.</returns>
+    public Project? GetActive()
     {
         using var conn = _factory.Open();
         using var cmd  = conn.CreateCommand();
         cmd.CommandText = @"
             SELECT ProjectId FROM Projects
+            WHERE  Status = 'Active'
             ORDER  BY ProjectId
             LIMIT  1;
         ";
@@ -100,6 +102,76 @@ public class ProjectRepository
 
         int id = Convert.ToInt32(result);
         return GetById(conn, null, id);
+    }
+
+    /// <summary>
+    /// Backwards-compatible alias for <see cref="GetActive"/>. Existing callers
+    /// that asked for "the current project" now resolve the active one.
+    /// </summary>
+    /// <returns>The active <see cref="Project"/>, or <c>null</c>.</returns>
+    public Project? GetFirst() => GetActive();
+
+    /// <summary>
+    /// Returns every project, active first then the rest, newest ID first within
+    /// each group. Used by the Reports project selector.
+    /// </summary>
+    /// <returns>All projects, ordered for display.</returns>
+    public List<Project> GetAll()
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT ProjectId, Name, Budget, Spent, StartDate, EndDate, Status, CompletedDate
+            FROM   Projects
+            ORDER  BY (CASE Status WHEN 'Active' THEN 0 ELSE 1 END), ProjectId DESC;
+        ";
+
+        var list = new List<Project>();
+        using var rd = cmd.ExecuteReader();
+        while (rd.Read())
+            list.Add(MapRow(rd));
+        return list;
+    }
+
+    /// <summary>
+    /// Returns all completed projects, most recently completed first.
+    /// </summary>
+    /// <returns>The completed projects.</returns>
+    public List<Project> GetCompleted()
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT ProjectId, Name, Budget, Spent, StartDate, EndDate, Status, CompletedDate
+            FROM   Projects
+            WHERE  Status = 'Completed'
+            ORDER  BY CompletedDate DESC;
+        ";
+
+        var list = new List<Project>();
+        using var rd = cmd.ExecuteReader();
+        while (rd.Read())
+            list.Add(MapRow(rd));
+        return list;
+    }
+
+    /// <summary>
+    /// Marks a project as completed, stamping today's date. After this the
+    /// project is read-only and a new active project may be created.
+    /// </summary>
+    /// <param name="projectId">The project to complete.</param>
+    public void MarkComplete(int projectId)
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = @"
+            UPDATE Projects
+            SET    Status        = 'Completed',
+                   CompletedDate = date('now')
+            WHERE  ProjectId = $id;
+        ";
+        cmd.Parameters.AddWithValue("$id", projectId);
+        cmd.ExecuteNonQuery();
     }
 
     /// <summary>
@@ -129,22 +201,32 @@ public class ProjectRepository
     }
 
     /// <summary>
-    /// Inserts a new project with <c>Spent</c> initialised to zero.
+    /// Inserts a new active project with <c>Spent</c> initialised to zero and
+    /// returns its generated <c>ProjectId</c>. Only one project may be active at
+    /// a time: if an active project already exists this throws and inserts nothing.
     /// </summary>
-    /// <param name="p">The project to insert. <c>ProjectId</c> and <c>Spent</c> are ignored.</param>
-    public void Insert(Project p)
+    /// <param name="p">The project to insert. <c>ProjectId</c>, <c>Spent</c> and <c>Status</c> are ignored.</param>
+    /// <returns>The new project's <c>ProjectId</c>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when another active project already exists.</exception>
+    public int Insert(Project p)
     {
+        if (GetActive() is not null)
+            throw new InvalidOperationException(
+                "Cannot create new project while another is active. " +
+                "Mark current project complete first.");
+
         using var conn = _factory.Open();
         using var cmd  = conn.CreateCommand();
         cmd.CommandText = @"
-            INSERT INTO Projects (Name, Budget, Spent, StartDate, EndDate)
-            VALUES ($n, $b, 0, $s, $e);
+            INSERT INTO Projects (Name, Budget, Spent, StartDate, EndDate, Status)
+            VALUES ($n, $b, 0, $s, $e, 'Active');
+            SELECT last_insert_rowid();
         ";
         cmd.Parameters.AddWithValue("$n", p.Name);
         cmd.Parameters.AddWithValue("$b", (double)p.Budget);
         cmd.Parameters.AddWithValue("$s", p.StartDate.ToString("yyyy-MM-dd"));
         cmd.Parameters.AddWithValue("$e", p.EndDate.ToString("yyyy-MM-dd"));
-        cmd.ExecuteNonQuery();
+        return Convert.ToInt32(cmd.ExecuteScalar());
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -152,11 +234,13 @@ public class ProjectRepository
     /// <summary>Maps a data reader row to a <see cref="Project"/> instance.</summary>
     private static Project MapRow(SqliteDataReader rd) => new()
     {
-        ProjectId = rd.GetInt32(0),
-        Name      = rd.GetString(1),
-        Budget    = (decimal)rd.GetDouble(2),
-        Spent     = (decimal)rd.GetDouble(3),
-        StartDate = DateTime.Parse(rd.GetString(4)),
-        EndDate   = DateTime.Parse(rd.GetString(5))
+        ProjectId     = rd.GetInt32(0),
+        Name          = rd.GetString(1),
+        Budget        = (decimal)rd.GetDouble(2),
+        Spent         = (decimal)rd.GetDouble(3),
+        StartDate     = DateTime.Parse(rd.GetString(4)),
+        EndDate       = DateTime.Parse(rd.GetString(5)),
+        Status        = rd.GetString(6),
+        CompletedDate = rd.IsDBNull(7) ? (DateTime?)null : DateTime.Parse(rd.GetString(7))
     };
 }

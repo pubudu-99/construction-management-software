@@ -9,4 +9,10 @@ public class Worker
     public string  Name       { get; set; } = "";
     public decimal HourlyRate { get; set; }
     public bool    IsActive   { get; set; }
+
+    /// <summary>National Identity Card number; null/blank when not recorded.</summary>
+    public string? NIC        { get; set; }
+
+    /// <summary>Contact phone number; null/blank when not recorded.</summary>
+    public string? Phone      { get; set; }
 }

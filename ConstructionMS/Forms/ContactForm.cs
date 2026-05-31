@@ -27,6 +27,7 @@ public partial class ContactForm : Form
         _service = new ContactService(repo);
         InitializeComponent();
         GridStyle.Apply(dgvContacts);
+        Theme.Apply(this);
         Load += ContactForm_Load;
     }
 

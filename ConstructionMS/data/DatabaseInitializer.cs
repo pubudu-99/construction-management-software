@@ -200,6 +200,77 @@ public class DatabaseInitializer
         {
             // Column already exists — nothing to do.
         }
+
+        // Add project lifecycle columns (sequential project support).
+        // Status is 'Active' or 'Completed'; CompletedDate is set when completed.
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText =
+                "ALTER TABLE Projects ADD COLUMN Status TEXT NOT NULL DEFAULT 'Active';";
+            cmd.ExecuteNonQuery();
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException)
+        {
+            // Column already exists — nothing to do.
+        }
+
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE Projects ADD COLUMN CompletedDate TEXT;";
+            cmd.ExecuteNonQuery();
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException)
+        {
+            // Column already exists — nothing to do.
+        }
+
+        // Normalize any pre-existing rows whose Status did not pick up the
+        // column default, so GetActive() resolves them correctly.
+        using (var fixCmd = conn.CreateCommand())
+        {
+            fixCmd.CommandText = "UPDATE Projects SET Status = 'Active' WHERE Status IS NULL;";
+            fixCmd.ExecuteNonQuery();
+        }
+
+        // Add worker identity columns (NIC national-ID and Phone).
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE Workers ADD COLUMN NIC TEXT;";
+            cmd.ExecuteNonQuery();
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException)
+        {
+            // Column already exists — nothing to do.
+        }
+
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE Workers ADD COLUMN Phone TEXT;";
+            cmd.ExecuteNonQuery();
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException)
+        {
+            // Column already exists — nothing to do.
+        }
+
+        // Enforce unique NIC for non-empty values, while permitting any number
+        // of NULL/blank NICs (backward compatibility with existing rows).
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_workers_nic
+                ON Workers(NIC) WHERE NIC IS NOT NULL AND NIC != '';";
+            cmd.ExecuteNonQuery();
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException)
+        {
+            // Index already exists — nothing to do.
+        }
     }
 
     /// <summary>
@@ -253,8 +324,8 @@ public class DatabaseInitializer
         using var seedCmd = conn.CreateCommand();
         seedCmd.Transaction = tx;
         seedCmd.CommandText = @"
-            INSERT INTO Projects (Name, Budget, Spent, StartDate, EndDate)
-            VALUES ($n, $b, 0, $s, $e);
+            INSERT INTO Projects (Name, Budget, Spent, StartDate, EndDate, Status)
+            VALUES ($n, $b, 0, $s, $e, 'Active');
         ";
         seedCmd.Parameters.AddWithValue("$n", "My Construction Project");
         seedCmd.Parameters.AddWithValue("$b", 5_000_000.0);

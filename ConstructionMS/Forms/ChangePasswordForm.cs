@@ -31,6 +31,7 @@ public partial class ChangePasswordForm : Form
     {
         _auth = new AuthService(factory, new UserRepository(factory));
         InitializeComponent();
+        Theme.Apply(this);
     }
 
     /// <summary>
@@ -48,6 +49,7 @@ public partial class ChangePasswordForm : Form
         InitializeComponent();
         // Override the subtitle set by InitializeComponent (Session.Current may be unset here).
         lblSubtitle.Text = $"Changing password for:  {user.FullName}";
+        Theme.Apply(this);
     }
 
     // ── Event handlers ────────────────────────────────────────────────────────

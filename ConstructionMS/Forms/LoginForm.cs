@@ -25,6 +25,7 @@ public partial class LoginForm : Form
         _factory = factory;
         InitializeComponent();
         _auth = new AuthService(factory, new UserRepository(factory));
+        Theme.Apply(this);
     }
 
     // ── Event handlers ───────────────────────────────────────────────────────

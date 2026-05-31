@@ -1,16 +1,27 @@
 using System.Text;
 using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
+using ConstructionMS.Models;
 using ConstructionMS.Services;
 
 namespace ConstructionMS.Forms;
 
 /// <summary>
 /// Module 6 — Reports form.
-/// Three tabs: Financial Summary, Payroll Summary, Stock Status.
+/// Four tabs: Financial Summary, Payroll Summary, Stock Status, Activity Log.
+/// A project selector at the top scopes the Financial tab to a chosen project
+/// (active or completed); Payroll and Stock are global across all projects.
 /// </summary>
 public partial class ReportForm : Form
 {
+    /// <summary>Combo item wrapper that renders a project as "Name (Status)".</summary>
+    private sealed class ProjectItem
+    {
+        public Project Project { get; }
+        public ProjectItem(Project project) => Project = project;
+        public override string ToString() => $"{Project.Name} ({Project.Status})";
+    }
+
     private readonly DbConnectionFactory     _factory;
     private readonly ProjectRepository       _projectRepo;
     private readonly ReportRepository        _reportRepo;
@@ -48,6 +59,7 @@ public partial class ReportForm : Form
         GridStyle.Apply(dgvPaySummary);
         GridStyle.Apply(dgvStockStatus);
         GridStyle.Apply(dgvActivityLog);
+        Theme.Apply(this);
 
         // Default payroll period: first of this month → today
         dtpPaySumFrom.Value = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -58,20 +70,57 @@ public partial class ReportForm : Form
 
     // ── Load ──────────────────────────────────────────────────────────────────
 
-    /// <summary>Loads all three tabs when the form first opens.</summary>
+    /// <summary>Loads the project selector and the tabs when the form first opens.</summary>
     private void ReportForm_Load(object? sender, EventArgs e)
     {
-        LoadFinancialTab();
+        // Position the combo just after the label's actual rendered width so the
+        // label never overlaps it (robust across DPI / font scaling).
+        cmbReportProject.Left = lblReportFor.Right + 12;
+
+        LoadProjectSelector();   // fires SelectedIndexChanged → loads Financial tab
+        LoadFinancialTab();      // also covers the empty-project case (no selection)
         LoadStockTab();
         // Payroll tab is generated on demand (user must click Generate).
     }
 
+    /// <summary>
+    /// Populates the project selector from all projects and defaults the
+    /// selection to the active project (or the first project if none is active).
+    /// </summary>
+    private void LoadProjectSelector()
+    {
+        var projects = _projectRepo.GetAll();
+
+        cmbReportProject.SelectedIndexChanged -= CmbReportProject_SelectedIndexChanged;
+        cmbReportProject.Items.Clear();
+
+        int activeIndex = -1;
+        for (int i = 0; i < projects.Count; i++)
+        {
+            cmbReportProject.Items.Add(new ProjectItem(projects[i]));
+            if (projects[i].Status == "Active") activeIndex = i;
+        }
+
+        if (cmbReportProject.Items.Count > 0)
+            cmbReportProject.SelectedIndex = activeIndex >= 0 ? activeIndex : 0;
+
+        cmbReportProject.SelectedIndexChanged += CmbReportProject_SelectedIndexChanged;
+    }
+
+    /// <summary>The project currently chosen in the selector, or <c>null</c> if none.</summary>
+    private Project? SelectedProject =>
+        cmbReportProject.SelectedItem is ProjectItem item ? item.Project : null;
+
+    /// <summary>Reloads the Financial tab for the newly selected project.</summary>
+    private void CmbReportProject_SelectedIndexChanged(object? sender, EventArgs e)
+        => LoadFinancialTab();
+
     // ── Tab 1 — Financial Summary ─────────────────────────────────────────────
 
-    /// <summary>Loads project budget figures and payment summary grid.</summary>
+    /// <summary>Loads project budget figures and payment summary grid for the selected project.</summary>
     private void LoadFinancialTab()
     {
-        var project = _projectRepo.GetFirst();
+        var project = SelectedProject;
 
         if (project is null)
         {

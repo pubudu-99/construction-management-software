@@ -24,6 +24,7 @@ public partial class UserManagementForm : Form
         _service = new UserService(factory, new UserRepository(factory));
         InitializeComponent();
         GridStyle.Apply(dgvUsers);
+        Theme.Apply(this);
         Load += UserManagementForm_Load;
     }
 

@@ -17,6 +17,8 @@ partial class DashboardForm
 
     // ── Header ───────────────────────────────────────────────────────────────
     private Panel  pnlHeader;
+    private Label  lblAppTitle;
+    private Label  lblAppSub;
     private Label  lblWelcome;
     private Button btnSignOut;
 
@@ -31,16 +33,27 @@ partial class DashboardForm
     private Button btnNavMaterials;
     private Button btnNavContacts;
     private Button btnNavReports;
+    private Button btnNavWorkers;
     private Button btnNavUsers;
+
+    // Section captions — kept as fields so they can be hidden/repositioned per role.
+    private Label  lblNavOperations;
+    private Label  lblNavResources;
+    private Label  lblNavPeople;
+    private Label  lblNavAdmin;
 
     // ── Main area ─────────────────────────────────────────────────────────────
     private Panel             pnlMain;
-    private TableLayoutPanel  tlpCards;
-    private GroupBox     grpDeadlines;
+    private Label             lblKpiHeading;
+    private TableLayoutPanel  tlpKpiRow1;
+    private TableLayoutPanel  tlpKpiRow2;
+    private Label             lblAlertHeading;
+    private TableLayoutPanel  tlpAlerts;
+    private CardPanel    cardDeadlines;
     private RichTextBox  rtbDeadlines;
-    private GroupBox     grpMaintenance;
+    private CardPanel    cardMaintenance;
     private RichTextBox  rtbMaintenance;
-    private GroupBox     grpLowStock;
+    private CardPanel    cardLowStock;
     private RichTextBox  rtbLowStock;
 
     protected override void Dispose(bool disposing)
@@ -62,6 +75,8 @@ partial class DashboardForm
         mnuHelpAbout          = new ToolStripMenuItem();
 
         pnlHeader         = new Panel();
+        lblAppTitle       = new Label();
+        lblAppSub         = new Label();
         lblWelcome        = new Label();
         btnSignOut        = new Button();
         pnlMenu           = new Panel();
@@ -74,14 +89,19 @@ partial class DashboardForm
         btnNavMaterials   = new Button();
         btnNavContacts    = new Button();
         btnNavReports     = new Button();
+        btnNavWorkers     = new Button();
         btnNavUsers       = new Button();
         pnlMain           = new Panel();
-        tlpCards          = new TableLayoutPanel();
-        grpDeadlines      = new GroupBox();
+        lblKpiHeading     = new Label();
+        tlpKpiRow1        = new TableLayoutPanel();
+        tlpKpiRow2        = new TableLayoutPanel();
+        lblAlertHeading   = new Label();
+        tlpAlerts         = new TableLayoutPanel();
+        cardDeadlines     = new CardPanel("Upcoming Deadlines", Theme.Danger);
         rtbDeadlines      = new RichTextBox();
-        grpMaintenance    = new GroupBox();
+        cardMaintenance   = new CardPanel("Maintenance Due", Theme.Caution);
         rtbMaintenance    = new RichTextBox();
-        grpLowStock       = new GroupBox();
+        cardLowStock      = new CardPanel("Low Stock", Theme.Primary);
         rtbLowStock       = new RichTextBox();
 
         SuspendLayout();
@@ -115,123 +135,131 @@ partial class DashboardForm
 
         // ── Header ────────────────────────────────────────────────────────────
         pnlHeader.Dock      = DockStyle.Top;
-        pnlHeader.Height    = 50;
-        pnlHeader.BackColor = Color.SteelBlue;
-        pnlHeader.Controls.Add(lblWelcome);
-        pnlHeader.Controls.Add(btnSignOut);
+        pnlHeader.Height    = 64;
+        pnlHeader.BackColor = Theme.Brand;
+
+        lblAppTitle.Text      = "Construction Manager";
+        lblAppTitle.Font      = new Font("Segoe UI", 14F, FontStyle.Bold);
+        lblAppTitle.ForeColor = Color.White;
+        lblAppTitle.AutoSize  = true;
+        lblAppTitle.Location  = new Point(18, 9);
+
+        lblAppSub.Text      = "Management Dashboard";
+        lblAppSub.Font      = new Font("Segoe UI", 9F);
+        lblAppSub.ForeColor = Theme.Lighten(Theme.Brand, 0.7);
+        lblAppSub.AutoSize  = true;
+        lblAppSub.Location  = new Point(20, 38);
 
         lblWelcome.Text      = "";
-        lblWelcome.Font      = new Font("Segoe UI", 11F, FontStyle.Bold);
+        lblWelcome.Font      = new Font("Segoe UI", 10F, FontStyle.Bold);
         lblWelcome.ForeColor = Color.White;
-        lblWelcome.Location  = new Point(12, 12);
-        lblWelcome.Size      = new Size(820, 26);
+        lblWelcome.TextAlign = ContentAlignment.MiddleRight;
         lblWelcome.AutoSize  = false;
+        lblWelcome.Size      = new Size(380, 24);
+        lblWelcome.Anchor    = AnchorStyles.Top | AnchorStyles.Right;
+        lblWelcome.Location  = new Point(1000 - 380 - 116, 20);
 
-        btnSignOut.Text                      = "Sign Out";
-        btnSignOut.Font                      = new Font("Segoe UI", 9F);
-        btnSignOut.BackColor                 = Color.FromArgb(180, 30, 30);
-        btnSignOut.ForeColor                 = Color.White;
-        btnSignOut.FlatStyle                 = FlatStyle.Flat;
-        btnSignOut.FlatAppearance.BorderSize = 0;
-        btnSignOut.Size                      = new Size(88, 30);
-        btnSignOut.Anchor                    = AnchorStyles.Top | AnchorStyles.Right;
-        btnSignOut.Location                  = new Point(892, 10);
-        btnSignOut.Cursor                    = Cursors.Hand;
-        btnSignOut.Click                    += BtnSignOut_Click;
+        btnSignOut.Text     = "Sign Out";
+        btnSignOut.Size     = new Size(96, 32);
+        btnSignOut.Anchor   = AnchorStyles.Top | AnchorStyles.Right;
+        btnSignOut.Location = new Point(1000 - 108, 16);
+        btnSignOut.Click   += BtnSignOut_Click;
+
+        pnlHeader.Controls.AddRange(new Control[] { lblAppTitle, lblAppSub, lblWelcome, btnSignOut });
 
         // ── Left nav ──────────────────────────────────────────────────────────
-        pnlMenu.Dock      = DockStyle.Left;
-        pnlMenu.Width     = 180;
-        pnlMenu.BackColor = Color.WhiteSmoke;
+        pnlMenu.Dock       = DockStyle.Left;
+        pnlMenu.Width      = 200;
+        pnlMenu.BackColor  = Color.White;
+        pnlMenu.AutoScroll = true;
 
-        int navY = 14;
-        SetupNavButton(btnNavProject,    "Project",    ref navY); btnNavProject.Click    += BtnNavProject_Click;
-        SetupNavButton(btnNavPayments,   "Payments",   ref navY); btnNavPayments.Click   += BtnNavPayments_Click;
-        SetupNavButton(btnNavTasks,      "Tasks",      ref navY); btnNavTasks.Click      += BtnNavTasks_Click;
-        SetupNavButton(btnNavAttendance, "Attendance", ref navY); btnNavAttendance.Click += BtnNavAttendance_Click;
-        SetupNavButton(btnNavPayroll,    "Payroll",    ref navY); btnNavPayroll.Click    += BtnNavPayroll_Click;
-        SetupNavButton(btnNavEquipment,  "Equipment",  ref navY); btnNavEquipment.Click  += BtnNavEquipment_Click;
-        SetupNavButton(btnNavMaterials,  "Materials",  ref navY); btnNavMaterials.Click  += BtnNavMaterials_Click;
-        SetupNavButton(btnNavContacts,   "Contacts",   ref navY); btnNavContacts.Click   += BtnNavContacts_Click;
-        SetupNavButton(btnNavReports,    "Reports",    ref navY); btnNavReports.Click    += BtnNavReports_Click;
-        SetupNavButton(btnNavUsers,      "Users",      ref navY); btnNavUsers.Click      += BtnNavUsers_Click;
+        int navY = 12;
+        lblNavOperations = AddNavSection(pnlMenu, "OPERATIONS", ref navY);
+        SetupNavButton(pnlMenu, btnNavProject,  "\U0001F4C1", "Project",  ref navY); btnNavProject.Click  += BtnNavProject_Click;
+        SetupNavButton(pnlMenu, btnNavPayments, "\U0001F4B0", "Payments", ref navY); btnNavPayments.Click += BtnNavPayments_Click;
+        SetupNavButton(pnlMenu, btnNavTasks,    "✔",      "Tasks",    ref navY); btnNavTasks.Click    += BtnNavTasks_Click;
+        SetupNavButton(pnlMenu, btnNavReports,  "\U0001F4CA", "Reports",  ref navY); btnNavReports.Click  += BtnNavReports_Click;
 
-        pnlMenu.Controls.AddRange(new Control[] {
-            btnNavProject, btnNavPayments, btnNavTasks, btnNavAttendance, btnNavPayroll,
-            btnNavEquipment, btnNavMaterials, btnNavContacts,
-            btnNavReports, btnNavUsers
-        });
+        lblNavResources = AddNavSection(pnlMenu, "RESOURCES", ref navY);
+        SetupNavButton(pnlMenu, btnNavEquipment, "\U0001F6E0", "Equipment", ref navY); btnNavEquipment.Click += BtnNavEquipment_Click;
+        SetupNavButton(pnlMenu, btnNavMaterials, "\U0001F4E6", "Materials", ref navY); btnNavMaterials.Click += BtnNavMaterials_Click;
+
+        lblNavPeople = AddNavSection(pnlMenu, "PEOPLE", ref navY);
+        SetupNavButton(pnlMenu, btnNavAttendance, "\U0001F551", "Attendance", ref navY); btnNavAttendance.Click += BtnNavAttendance_Click;
+        SetupNavButton(pnlMenu, btnNavPayroll,    "\U0001F4B5", "Payroll",    ref navY); btnNavPayroll.Click    += BtnNavPayroll_Click;
+        SetupNavButton(pnlMenu, btnNavContacts,   "☎",      "Contacts",   ref navY); btnNavContacts.Click   += BtnNavContacts_Click;
+        SetupNavButton(pnlMenu, btnNavWorkers,    "\U0001F477", "Workers",    ref navY); btnNavWorkers.Click    += BtnNavWorkers_Click;
+
+        lblNavAdmin = AddNavSection(pnlMenu, "ADMIN", ref navY);
+        SetupNavButton(pnlMenu, btnNavUsers, "\U0001F464", "Users", ref navY); btnNavUsers.Click += BtnNavUsers_Click;
 
         // ── Main area ─────────────────────────────────────────────────────────
-        pnlMain.Dock      = DockStyle.Fill;
-        pnlMain.BackColor = Color.White;
-        pnlMain.Padding   = new Padding(20);
-        pnlMain.Controls.Add(tlpCards);
+        pnlMain.Dock       = DockStyle.Fill;
+        pnlMain.BackColor  = Theme.Surface;
+        pnlMain.Padding    = new Padding(20, 16, 20, 16);
+        pnlMain.AutoScroll = true;
 
-        // Responsive card row: 3 equal columns × 1 row, fills the dashboard area
-        // and resizes automatically as the window grows.
-        tlpCards.Dock        = DockStyle.Top;
-        tlpCards.Height      = 280;
-        tlpCards.ColumnCount = 3;
-        tlpCards.RowCount    = 1;
-        tlpCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
-        tlpCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-        tlpCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-        tlpCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        tlpCards.BackColor   = Color.White;
+        lblKpiHeading.Text      = "Overview";
+        lblKpiHeading.Dock      = DockStyle.Top;
+        lblKpiHeading.Height    = 30;
+        lblKpiHeading.Font      = new Font("Segoe UI", 11F, FontStyle.Bold);
+        lblKpiHeading.ForeColor = Theme.TextPrimary;
 
-        // Upcoming Deadlines
-        grpDeadlines.Text     = "Upcoming Deadlines";
-        grpDeadlines.Font     = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        grpDeadlines.Dock     = DockStyle.Fill;
-        grpDeadlines.Margin   = new Padding(0, 0, 8, 0);
-        grpDeadlines.Controls.Add(rtbDeadlines);
+        // Row 1 — 3 equal full-width cards
+        tlpKpiRow1.Dock        = DockStyle.Top;
+        tlpKpiRow1.Height      = 132;          // DPI-adjusted at runtime in SizeKpiRows()
+        tlpKpiRow1.ColumnCount = 3;
+        tlpKpiRow1.RowCount    = 1;
+        tlpKpiRow1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+        tlpKpiRow1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+        tlpKpiRow1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+        tlpKpiRow1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpKpiRow1.BackColor   = Theme.Surface;
 
-        rtbDeadlines.ReadOnly    = true;
-        rtbDeadlines.BorderStyle = BorderStyle.None;
-        rtbDeadlines.BackColor   = Color.White;
-        rtbDeadlines.Font        = new Font("Segoe UI", 9F);
-        rtbDeadlines.ScrollBars  = RichTextBoxScrollBars.Vertical;
-        rtbDeadlines.DetectUrls  = false;
-        rtbDeadlines.Dock        = DockStyle.Fill;
-        rtbDeadlines.Padding     = new Padding(4, 2, 4, 2);
+        // Row 2 — 4 equal full-width cards
+        tlpKpiRow2.Dock        = DockStyle.Top;
+        tlpKpiRow2.Height      = 132;
+        tlpKpiRow2.ColumnCount = 4;
+        tlpKpiRow2.RowCount    = 1;
+        tlpKpiRow2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        tlpKpiRow2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        tlpKpiRow2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        tlpKpiRow2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        tlpKpiRow2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpKpiRow2.BackColor   = Theme.Surface;
 
-        // Maintenance Due
-        grpMaintenance.Text     = "Maintenance Due";
-        grpMaintenance.Font     = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        grpMaintenance.Dock     = DockStyle.Fill;
-        grpMaintenance.Margin   = new Padding(4, 0, 4, 0);
-        grpMaintenance.Controls.Add(rtbMaintenance);
+        lblAlertHeading.Text      = "Alerts";
+        lblAlertHeading.Dock      = DockStyle.Top;
+        lblAlertHeading.Height    = 32;
+        lblAlertHeading.Padding   = new Padding(0, 8, 0, 0);
+        lblAlertHeading.Font      = new Font("Segoe UI", 11F, FontStyle.Bold);
+        lblAlertHeading.ForeColor = Theme.TextPrimary;
 
-        rtbMaintenance.ReadOnly    = true;
-        rtbMaintenance.BorderStyle = BorderStyle.None;
-        rtbMaintenance.BackColor   = Color.White;
-        rtbMaintenance.Font        = new Font("Segoe UI", 9F);
-        rtbMaintenance.ScrollBars  = RichTextBoxScrollBars.Vertical;
-        rtbMaintenance.DetectUrls  = false;
-        rtbMaintenance.Dock        = DockStyle.Fill;
-        rtbMaintenance.Padding     = new Padding(4, 2, 4, 2);
+        // Alert cards row
+        tlpAlerts.Dock        = DockStyle.Top;
+        tlpAlerts.Height      = 300;
+        tlpAlerts.ColumnCount = 3;
+        tlpAlerts.RowCount    = 1;
+        tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+        tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+        tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+        tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpAlerts.BackColor   = Theme.Surface;
 
-        // Low Stock
-        grpLowStock.Text     = "Low Stock";
-        grpLowStock.Font     = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        grpLowStock.Dock     = DockStyle.Fill;
-        grpLowStock.Margin   = new Padding(8, 0, 0, 0);
-        grpLowStock.Controls.Add(rtbLowStock);
+        ConfigureAlertCard(cardDeadlines,   rtbDeadlines,   new Padding(0, 0, 8, 0));
+        ConfigureAlertCard(cardMaintenance, rtbMaintenance, new Padding(4, 0, 4, 0));
+        ConfigureAlertCard(cardLowStock,    rtbLowStock,    new Padding(8, 0, 0, 0));
 
-        rtbLowStock.ReadOnly    = true;
-        rtbLowStock.BorderStyle = BorderStyle.None;
-        rtbLowStock.BackColor   = Color.White;
-        rtbLowStock.Font        = new Font("Segoe UI", 9F);
-        rtbLowStock.ScrollBars  = RichTextBoxScrollBars.Vertical;
-        rtbLowStock.DetectUrls  = false;
-        rtbLowStock.Dock        = DockStyle.Fill;
-        rtbLowStock.Padding     = new Padding(4, 2, 4, 2);
+        tlpAlerts.Controls.Add(cardDeadlines,   0, 0);
+        tlpAlerts.Controls.Add(cardMaintenance, 1, 0);
+        tlpAlerts.Controls.Add(cardLowStock,    2, 0);
 
-        // Place the 3 GroupBoxes into the 3 columns (col, row).
-        tlpCards.Controls.Add(grpDeadlines,   0, 0);
-        tlpCards.Controls.Add(grpMaintenance, 1, 0);
-        tlpCards.Controls.Add(grpLowStock,    2, 0);
+        // Add bottom-up so the visual order (top→bottom) is heading, KPI rows, heading, alerts.
+        pnlMain.Controls.Add(tlpAlerts);
+        pnlMain.Controls.Add(lblAlertHeading);
+        pnlMain.Controls.Add(tlpKpiRow2);
+        pnlMain.Controls.Add(tlpKpiRow1);
+        pnlMain.Controls.Add(lblKpiHeading);
 
         // ── Form ──────────────────────────────────────────────────────────────
         AutoScaleMode = AutoScaleMode.Font;
@@ -239,9 +267,9 @@ partial class DashboardForm
         Text          = "Construction Management - Dashboard";
         StartPosition = FormStartPosition.CenterScreen;
         WindowState   = FormWindowState.Maximized;
-        MinimumSize   = new Size(900, 520);
+        MinimumSize   = new Size(940, 560);
         Font          = new Font("Segoe UI", 9F);
-        BackColor     = Color.White;
+        BackColor     = Theme.Surface;
 
         Controls.Add(pnlMain);
         Controls.Add(pnlMenu);
@@ -253,19 +281,55 @@ partial class DashboardForm
         PerformLayout();
     }
 
-    /// <summary>Applies consistent style and position to a nav button.</summary>
-    private static void SetupNavButton(Button btn, string text, ref int y)
+    /// <summary>Adds a small muted section caption to the nav panel and returns it.</summary>
+    private static Label AddNavSection(Panel parent, string text, ref int y)
     {
-        btn.Text      = text;
+        var lbl = new Label
+        {
+            Text      = text,
+            Font      = new Font("Segoe UI", 7.5F, FontStyle.Bold),
+            ForeColor = Theme.TextMuted,
+            Location  = new Point(16, y + 6),
+            Size      = new Size(168, 14),
+            TextAlign = ContentAlignment.MiddleLeft,
+        };
+        parent.Controls.Add(lbl);
+        y += 24;
+        return lbl;
+    }
+
+    /// <summary>Applies consistent style and position to a nav button and adds it.</summary>
+    private static void SetupNavButton(Panel parent, Button btn, string glyph, string text, ref int y)
+    {
+        btn.Text      = $"  {glyph}   {text}";
         btn.Font      = new Font("Segoe UI", 9.5F);
+        btn.ForeColor = Theme.TextPrimary;
         btn.FlatStyle = FlatStyle.Flat;
-        btn.FlatAppearance.BorderColor = Color.LightGray;
+        btn.FlatAppearance.BorderSize        = 0;
+        btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(235, 240, 248);
         btn.BackColor = Color.White;
         btn.TextAlign = ContentAlignment.MiddleLeft;
-        btn.Padding   = new Padding(8, 0, 0, 0);
         btn.Location  = new Point(10, y);
-        btn.Size      = new Size(160, 34);
+        btn.Size      = new Size(180, 36);
         btn.Cursor    = Cursors.Hand;
-        y += 38;
+        parent.Controls.Add(btn);
+        y += 40;
+    }
+
+    /// <summary>Docks an alert RichTextBox into a card and sets the card's grid margin.</summary>
+    private static void ConfigureAlertCard(CardPanel card, RichTextBox rtb, Padding margin)
+    {
+        card.Dock   = DockStyle.Fill;
+        card.Margin = margin;
+
+        rtb.ReadOnly    = true;
+        rtb.BorderStyle = BorderStyle.None;
+        rtb.BackColor   = Color.White;
+        rtb.Font        = new Font("Segoe UI", 9F);
+        rtb.ScrollBars  = RichTextBoxScrollBars.Vertical;
+        rtb.DetectUrls  = false;
+        rtb.Dock        = DockStyle.Fill;
+
+        card.Content.Controls.Add(rtb);
     }
 }

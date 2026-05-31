@@ -31,6 +31,7 @@ public partial class PaymentForm : Form
 
         InitializeComponent();
         GridStyle.Apply(dgvPayments);
+        Theme.Apply(this);
 
         // FR1.3 — Role-based access: only Managers may record payments.
         if (!Session.IsManager)
@@ -53,18 +54,17 @@ public partial class PaymentForm : Form
     }
 
     /// <summary>
-    /// Finds the first project and stores its ID.
-    /// Warns and closes if no project exists.
+    /// Finds the active project and stores its ID.
+    /// Warns and closes if no active project exists.
     /// </summary>
     private bool LoadProject()
     {
-        _currentProject = _projectRepo.GetFirst();
+        _currentProject = _projectRepo.GetActive();
         if (_currentProject is null)
         {
             MessageBox.Show(
-                "No projects found in the database.\n" +
-                "Please add a project before recording payments.",
-                "No Project",
+                "No active project. Please create one via Project Setup before recording payments.",
+                "No Active Project",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
             Close();

@@ -9,7 +9,6 @@ partial class AttendanceForm
     private Label         lblFormTitle;
     private Label         lblWorker;
     private ComboBox      cmbWorker;
-    private Button        btnAddWorker;
     private Label         lblAttDate;
     private DateTimePicker dtpAttDate;
     private Label         lblHours;
@@ -40,7 +39,6 @@ partial class AttendanceForm
         lblFormTitle      = new Label();
         lblWorker         = new Label();
         cmbWorker         = new ComboBox();
-        btnAddWorker      = new Button();
         lblAttDate        = new Label();
         dtpAttDate        = new DateTimePicker();
         lblHours          = new Label();
@@ -65,11 +63,11 @@ partial class AttendanceForm
         // LEFT PANEL
         // ══════════════════════════════════════════════════════════════════════
         pnlLeft.Dock      = DockStyle.Left;
-        pnlLeft.Width     = 360;
+        pnlLeft.Width     = 400;
         pnlLeft.BackColor = Color.FromArgb(248, 249, 250);
         pnlLeft.AutoScroll = true;
 
-        const int lx = 16, fw = 320;
+        const int lx = 16, fw = 360;
         int y = 14;
 
         lblFormTitle.Text      = "Record Attendance";
@@ -86,21 +84,14 @@ partial class AttendanceForm
         lblWorker.Size      = new Size(fw, 18);
         y += 20;
 
-        cmbWorker.DropDownStyle = ComboBoxStyle.DropDownList;
-        cmbWorker.Font          = new Font("Segoe UI", 9.5F);
-        cmbWorker.Location      = new Point(lx, y);
-        cmbWorker.Size          = new Size(fw - 110, 26);
-
-        btnAddWorker.Text                      = "+ Add Worker";
-        btnAddWorker.Font                      = new Font("Segoe UI", 8.5F);
-        btnAddWorker.FlatStyle                 = FlatStyle.Flat;
-        btnAddWorker.FlatAppearance.BorderColor = Color.SteelBlue;
-        btnAddWorker.ForeColor                 = Color.SteelBlue;
-        btnAddWorker.BackColor                 = Color.White;
-        btnAddWorker.Location                  = new Point(lx + fw - 104, y);
-        btnAddWorker.Size                      = new Size(104, 26);
-        btnAddWorker.Cursor                    = Cursors.Hand;
-        btnAddWorker.Click                    += BtnAddWorker_Click;
+        // DropDown (not DropDownList) + autocomplete makes the list type-to-search.
+        // Workers are added/managed from the Worker Management form, not here.
+        cmbWorker.DropDownStyle      = ComboBoxStyle.DropDown;
+        cmbWorker.AutoCompleteMode   = AutoCompleteMode.SuggestAppend;
+        cmbWorker.AutoCompleteSource = AutoCompleteSource.ListItems;
+        cmbWorker.Font               = new Font("Segoe UI", 9.5F);
+        cmbWorker.Location           = new Point(lx, y);
+        cmbWorker.Size               = new Size(fw, 26);
         y += 34;
 
         lblAttDate.Text      = "Date  *";
@@ -155,7 +146,7 @@ partial class AttendanceForm
 
         pnlLeft.Controls.AddRange(new Control[] {
             lblFormTitle,
-            lblWorker, cmbWorker, btnAddWorker,
+            lblWorker, cmbWorker,
             lblAttDate, dtpAttDate,
             lblHours, numHours,
             btnSaveAttendance, lblAttStatus
@@ -180,8 +171,8 @@ partial class AttendanceForm
 
         lblHistFrom.Text      = "From:";
         lblHistFrom.Font      = new Font("Segoe UI", 9F);
-        lblHistFrom.Location  = new Point(0, 9);
-        lblHistFrom.Size      = new Size(42, 20);
+        lblHistFrom.AutoSize  = true;
+        lblHistFrom.Location  = new Point(0, 11);
         lblHistFrom.TextAlign = ContentAlignment.MiddleLeft;
 
         dtpHistFrom.Format   = DateTimePickerFormat.Short;
@@ -192,8 +183,8 @@ partial class AttendanceForm
 
         lblHistTo.Text      = "To:";
         lblHistTo.Font      = new Font("Segoe UI", 9F);
-        lblHistTo.Location  = new Point(176, 9);
-        lblHistTo.Size      = new Size(28, 20);
+        lblHistTo.AutoSize  = true;
+        lblHistTo.Location  = new Point(176, 11);
         lblHistTo.TextAlign = ContentAlignment.MiddleLeft;
 
         dtpHistTo.Format   = DateTimePickerFormat.Short;
@@ -202,13 +193,15 @@ partial class AttendanceForm
         dtpHistTo.Location = new Point(208, 8);
         dtpHistTo.Size     = new Size(120, 24);
 
+        // Fixed size, vertically centred against the date pickers (y 8, height 24).
         btnRefreshHist.Text                       = "Refresh";
         btnRefreshHist.Font                       = new Font("Segoe UI", 9F);
         btnRefreshHist.FlatStyle                  = FlatStyle.Flat;
         btnRefreshHist.FlatAppearance.BorderColor = Color.LightGray;
         btnRefreshHist.BackColor                  = Color.WhiteSmoke;
-        btnRefreshHist.Location                   = new Point(338, 6);
-        btnRefreshHist.Size                       = new Size(80, 26);
+        btnRefreshHist.Location                   = new Point(340, 7);
+        btnRefreshHist.Size                       = new Size(90, 26);
+        btnRefreshHist.Cursor                     = Cursors.Hand;
         btnRefreshHist.Click                     += BtnRefreshHist_Click;
 
         pnlHistFilter.Controls.AddRange(new Control[] {
@@ -238,10 +231,10 @@ partial class AttendanceForm
 
         // ── Form ──────────────────────────────────────────────────────────────
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize    = new Size(900, 500);
+        ClientSize    = new Size(960, 500);
         Text          = "Attendance Management";
         StartPosition = FormStartPosition.CenterParent;
-        MinimumSize   = new Size(780, 420);
+        MinimumSize   = new Size(840, 420);
         Font          = new Font("Segoe UI", 9F);
         BackColor     = Color.White;
 

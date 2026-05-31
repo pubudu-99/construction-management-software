@@ -5,6 +5,9 @@ partial class ReportForm
     private System.ComponentModel.IContainer components = null;
 
     // ── Shared ────────────────────────────────────────────────────────────────
+    private Panel        pnlReportTop;
+    private Label        lblReportFor;
+    private ComboBox     cmbReportProject;
     private TabControl   tabReports;
     private TabPage      tabFinancial;
     private TabPage      tabPayroll;
@@ -30,12 +33,14 @@ partial class ReportForm
     private Button       btnRunPaySummary;
     private Label        lblPaySummaryTotal;
     private Button       btnExportPayroll;
+    private Label        lblPayNote;
     private DataGridView dgvPaySummary;
 
     // ── Tab 3 — Stock Status ──────────────────────────────────────────────────
     private Panel        pnlStockButtons;
     private Button       btnRefreshStock;
     private Button       btnExportStock;
+    private Label        lblStockNote;
     private DataGridView dgvStockStatus;
 
     // ── Tab 4 — Activity Log ──────────────────────────────────────────────────
@@ -53,6 +58,9 @@ partial class ReportForm
 
     private void InitializeComponent()
     {
+        pnlReportTop     = new Panel();
+        lblReportFor     = new Label();
+        cmbReportProject = new ComboBox();
         tabReports      = new TabControl();
         tabFinancial    = new TabPage();
         tabPayroll      = new TabPage();
@@ -78,12 +86,14 @@ partial class ReportForm
         btnRunPaySummary   = new Button();
         lblPaySummaryTotal = new Label();
         btnExportPayroll   = new Button();
+        lblPayNote         = new Label();
         dgvPaySummary      = new DataGridView();
 
         // Stock tab controls
         pnlStockButtons    = new Panel();
         btnRefreshStock    = new Button();
         btnExportStock     = new Button();
+        lblStockNote       = new Label();
         dgvStockStatus     = new DataGridView();
 
         // Activity Log tab controls
@@ -98,6 +108,27 @@ partial class ReportForm
         ((System.ComponentModel.ISupportInitialize)dgvStockStatus).BeginInit();
         ((System.ComponentModel.ISupportInitialize)dgvActivityLog).BeginInit();
         SuspendLayout();
+
+        // ══════════════════════════════════════════════════════════════════════
+        // TOP BAR — Project selector (scopes the Financial tab)
+        // ══════════════════════════════════════════════════════════════════════
+        pnlReportTop.Dock      = DockStyle.Top;
+        pnlReportTop.Height    = 44;
+        pnlReportTop.BackColor = Color.FromArgb(238, 242, 247);
+        pnlReportTop.Padding   = new Padding(16, 8, 16, 8);
+
+        lblReportFor.Text      = "View Reports For:";
+        lblReportFor.Font      = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        lblReportFor.ForeColor = Color.FromArgb(30, 90, 160);
+        lblReportFor.AutoSize  = true;
+        lblReportFor.Location  = new Point(16, 13);
+
+        cmbReportProject.DropDownStyle = ComboBoxStyle.DropDownList;
+        cmbReportProject.Font          = new Font("Segoe UI", 9.5F);
+        cmbReportProject.Location      = new Point(132, 9);
+        cmbReportProject.Size          = new Size(350, 26);
+
+        pnlReportTop.Controls.AddRange(new Control[] { lblReportFor, cmbReportProject });
 
         // ══════════════════════════════════════════════════════════════════════
         // TAB 1 — Financial Summary
@@ -173,32 +204,38 @@ partial class ReportForm
         // TAB 2 — Payroll Summary
         // ══════════════════════════════════════════════════════════════════════
         pnlPayHeader.Dock      = DockStyle.Top;
-        pnlPayHeader.Height    = 92;
+        pnlPayHeader.Height    = 96;
         pnlPayHeader.BackColor = Color.FromArgb(248, 249, 250);
 
-        int py = 14;
+        // Two clean rows. Labels share the control height (26) with MiddleLeft
+        // alignment so they vertically centre against the pickers/buttons.
+        const int row1 = 16, row2 = 54, ctlH = 26, btnX = 366, btnW = 110;
 
         lblPayFrom.Text      = "From";
         lblPayFrom.Font      = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblPayFrom.ForeColor = Color.FromArgb(60, 60, 60);
-        lblPayFrom.AutoSize  = true;
-        lblPayFrom.Location  = new Point(16, py + 2);
+        lblPayFrom.AutoSize  = false;
+        lblPayFrom.TextAlign = ContentAlignment.MiddleLeft;
+        lblPayFrom.Location  = new Point(16, row1);
+        lblPayFrom.Size      = new Size(38, ctlH);
 
         dtpPaySumFrom.Format   = DateTimePickerFormat.Short;
         dtpPaySumFrom.Font     = new Font("Segoe UI", 9.5F);
-        dtpPaySumFrom.Location = new Point(60, py - 2);
-        dtpPaySumFrom.Size     = new Size(130, 26);
+        dtpPaySumFrom.Location = new Point(56, row1);
+        dtpPaySumFrom.Size     = new Size(130, ctlH);
 
         lblPayTo.Text      = "To";
         lblPayTo.Font      = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblPayTo.ForeColor = Color.FromArgb(60, 60, 60);
-        lblPayTo.AutoSize  = true;
-        lblPayTo.Location  = new Point(204, py + 2);
+        lblPayTo.AutoSize  = false;
+        lblPayTo.TextAlign = ContentAlignment.MiddleLeft;
+        lblPayTo.Location  = new Point(196, row1);
+        lblPayTo.Size      = new Size(26, ctlH);
 
         dtpPaySumTo.Format   = DateTimePickerFormat.Short;
         dtpPaySumTo.Font     = new Font("Segoe UI", 9.5F);
-        dtpPaySumTo.Location = new Point(230, py - 2);
-        dtpPaySumTo.Size     = new Size(130, 26);
+        dtpPaySumTo.Location = new Point(224, row1);
+        dtpPaySumTo.Size     = new Size(130, ctlH);
 
         btnRunPaySummary.Text                      = "Generate";
         btnRunPaySummary.Font                      = new Font("Segoe UI", 9F, FontStyle.Bold);
@@ -206,17 +243,18 @@ partial class ReportForm
         btnRunPaySummary.ForeColor                 = Color.White;
         btnRunPaySummary.FlatStyle                 = FlatStyle.Flat;
         btnRunPaySummary.FlatAppearance.BorderSize = 0;
-        btnRunPaySummary.Location                  = new Point(374, py - 2);
-        btnRunPaySummary.Size                      = new Size(100, 26);
+        btnRunPaySummary.Location                  = new Point(btnX, row1);
+        btnRunPaySummary.Size                      = new Size(btnW, ctlH);
         btnRunPaySummary.Cursor                    = Cursors.Hand;
         btnRunPaySummary.Click                    += BtnRunPaySummary_Click;
-        py += 36;
 
         lblPaySummaryTotal.Text      = "Grand Total:  LKR 0.00";
         lblPaySummaryTotal.Font      = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblPaySummaryTotal.ForeColor = Color.FromArgb(30, 90, 160);
-        lblPaySummaryTotal.Location  = new Point(16, py);
-        lblPaySummaryTotal.Size      = new Size(320, 20);
+        lblPaySummaryTotal.AutoSize  = false;
+        lblPaySummaryTotal.TextAlign = ContentAlignment.MiddleLeft;
+        lblPaySummaryTotal.Location  = new Point(16, row2);
+        lblPaySummaryTotal.Size      = new Size(338, ctlH);
 
         btnExportPayroll.Text                      = "Export CSV";
         btnExportPayroll.Font                      = new Font("Segoe UI", 9F, FontStyle.Bold);
@@ -224,14 +262,22 @@ partial class ReportForm
         btnExportPayroll.ForeColor                 = Color.White;
         btnExportPayroll.FlatStyle                 = FlatStyle.Flat;
         btnExportPayroll.FlatAppearance.BorderSize = 0;
-        btnExportPayroll.Location                  = new Point(374, py - 2);
-        btnExportPayroll.Size                      = new Size(100, 26);
+        btnExportPayroll.Location                  = new Point(btnX, row2);
+        btnExportPayroll.Size                      = new Size(btnW, ctlH);
         btnExportPayroll.Cursor                    = Cursors.Hand;
         btnExportPayroll.Click                    += BtnExportPayroll_Click;
 
+        lblPayNote.Text      = "Note: Workers and payroll are firm-wide and not filtered by project.";
+        lblPayNote.Font      = new Font("Segoe UI", 8.5F, FontStyle.Italic);
+        lblPayNote.ForeColor = Color.FromArgb(120, 120, 120);
+        lblPayNote.AutoSize  = false;
+        lblPayNote.TextAlign = ContentAlignment.MiddleLeft;
+        lblPayNote.Location  = new Point(btnX + btnW + 14, row2);
+        lblPayNote.Size      = new Size(470, ctlH);
+
         pnlPayHeader.Controls.AddRange(new Control[] {
             lblPayFrom, dtpPaySumFrom, lblPayTo, dtpPaySumTo,
-            btnRunPaySummary, lblPaySummaryTotal, btnExportPayroll
+            btnRunPaySummary, lblPaySummaryTotal, btnExportPayroll, lblPayNote
         });
 
         dgvPaySummary.Dock = DockStyle.Fill;
@@ -270,7 +316,13 @@ partial class ReportForm
         btnExportStock.Cursor                    = Cursors.Hand;
         btnExportStock.Click                    += BtnExportStock_Click;
 
-        pnlStockButtons.Controls.AddRange(new Control[] { btnRefreshStock, btnExportStock });
+        lblStockNote.Text      = "Note: Material stock is firm-wide and not filtered by project.";
+        lblStockNote.Font      = new Font("Segoe UI", 8.5F, FontStyle.Italic);
+        lblStockNote.ForeColor = Color.FromArgb(120, 120, 120);
+        lblStockNote.AutoSize  = true;
+        lblStockNote.Location  = new Point(244, 16);
+
+        pnlStockButtons.Controls.AddRange(new Control[] { btnRefreshStock, btnExportStock, lblStockNote });
 
         dgvStockStatus.Dock            = DockStyle.Fill;
         dgvStockStatus.CellFormatting += DgvStockStatus_CellFormatting;
@@ -344,6 +396,7 @@ partial class ReportForm
         BackColor     = Color.White;
 
         Controls.Add(tabReports);
+        Controls.Add(pnlReportTop);
 
         ((System.ComponentModel.ISupportInitialize)dgvPaymentSummary).EndInit();
         ((System.ComponentModel.ISupportInitialize)dgvPaySummary).EndInit();

@@ -17,6 +17,7 @@ public partial class AttendanceForm : Form
     {
         InitializeComponent();
         GridStyle.Apply(dgvAttendance);
+        Theme.Apply(this);
         _workerRepo     = new WorkerRepository(factory);
         _attendanceRepo = new AttendanceRepository(factory);
         LoadWorkers();
@@ -30,6 +31,10 @@ public partial class AttendanceForm : Form
         public int    Id   { get; }
         public ComboItem(string text, int id) { Text = text; Id = id; }
         public override string ToString() => Text;
+
+        /// <summary>Builds the display text "Name (NIC: xxx)", or just "Name" when no NIC.</summary>
+        public static ComboItem For(Worker w) =>
+            new(string.IsNullOrWhiteSpace(w.NIC) ? w.Name : $"{w.Name} (NIC: {w.NIC})", w.WorkerId);
     }
 
     // ── Worker combo ─────────────────────────────────────────────────────────
@@ -41,7 +46,7 @@ public partial class AttendanceForm : Form
         cmbWorker.Items.Clear();
 
         foreach (var w in _workerRepo.GetActive())
-            cmbWorker.Items.Add(new ComboItem(w.Name, w.WorkerId));
+            cmbWorker.Items.Add(ComboItem.For(w));
 
         // Re-select previously chosen worker if still present
         if (selectedId.HasValue)
@@ -57,117 +62,6 @@ public partial class AttendanceForm : Form
         }
 
         if (cmbWorker.Items.Count > 0) cmbWorker.SelectedIndex = 0;
-    }
-
-    // ── Add Worker ───────────────────────────────────────────────────────────
-
-    /// <summary>Shows a mini-dialog to register a new worker, then reloads the drop-down.</summary>
-    private void BtnAddWorker_Click(object? sender, EventArgs e)
-    {
-        using var dlg = BuildAddWorkerDialog();
-        if (dlg.ShowDialog(this) != DialogResult.OK) return;
-
-        var txtName = (TextBox)dlg.Controls["txtName"]!;
-        var numRate = (NumericUpDown)dlg.Controls["numRate"]!;
-
-        var name = txtName.Text.Trim();
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            MessageBox.Show("Worker name is required.", "Validation",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        int newId = _workerRepo.Insert(new Worker
-        {
-            Name       = name,
-            HourlyRate = numRate.Value,
-            IsActive   = true
-        });
-
-        LoadWorkers();
-
-        // Select the newly created worker in the combo
-        for (int i = 0; i < cmbWorker.Items.Count; i++)
-        {
-            if (cmbWorker.Items[i] is ComboItem ci && ci.Id == newId)
-            {
-                cmbWorker.SelectedIndex = i;
-                break;
-            }
-        }
-    }
-
-    /// <summary>Builds and returns the "Add Worker" mini-form.</summary>
-    private static Form BuildAddWorkerDialog()
-    {
-        var dlg = new Form
-        {
-            Text            = "Add Worker",
-            ClientSize      = new Size(340, 168),
-            StartPosition   = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MaximizeBox     = false,
-            MinimizeBox     = false,
-            Font            = new Font("Segoe UI", 9F)
-        };
-
-        var lblName = new Label
-        {
-            Text      = "Full Name:",
-            Location  = new Point(12, 18),
-            Size      = new Size(112, 20),
-            TextAlign = ContentAlignment.MiddleLeft
-        };
-        var txtName = new TextBox
-        {
-            Name     = "txtName",
-            Location = new Point(128, 14),
-            Size     = new Size(194, 24)
-        };
-
-        var lblRate = new Label
-        {
-            Text      = "Hourly Rate (LKR):",
-            Location  = new Point(12, 56),
-            Size      = new Size(112, 20),
-            TextAlign = ContentAlignment.MiddleLeft
-        };
-        var numRate = new NumericUpDown
-        {
-            Name          = "numRate",
-            Location      = new Point(128, 52),
-            Size          = new Size(194, 24),
-            Minimum       = 1,
-            Maximum       = 999999,
-            DecimalPlaces = 2,
-            Value         = 250
-        };
-
-        var btnOk = new Button
-        {
-            Text         = "Add",
-            DialogResult = DialogResult.OK,
-            Location     = new Point(144, 116),
-            Size         = new Size(82, 30),
-            BackColor    = Color.FromArgb(40, 167, 69),
-            ForeColor    = Color.White,
-            FlatStyle    = FlatStyle.Flat
-        };
-        btnOk.FlatAppearance.BorderSize = 0;
-
-        var btnCancel = new Button
-        {
-            Text         = "Cancel",
-            DialogResult = DialogResult.Cancel,
-            Location     = new Point(240, 116),
-            Size         = new Size(82, 30)
-        };
-
-        dlg.Controls.AddRange(new Control[] { lblName, txtName, lblRate, numRate, btnOk, btnCancel });
-        dlg.AcceptButton = btnOk;
-        dlg.CancelButton = btnCancel;
-        return dlg;
     }
 
     // ── Save attendance ──────────────────────────────────────────────────────

@@ -53,7 +53,8 @@ public class TaskRepository
 
     /// <summary>
     /// Returns all tasks with Status = 'Open', ordered by end date ascending.
-    /// Used by the dashboard deadline alert loader.
+    /// Spans every project; callers that need a single project's open tasks
+    /// should use <see cref="GetOpenTasksForProject"/> instead.
     /// </summary>
     public List<ProjectTask> GetOpenTasks()
     {
@@ -65,6 +66,26 @@ public class TaskRepository
             WHERE  Status = 'Open'
             ORDER  BY EndDate ASC;
         ";
+        return ReadList(cmd);
+    }
+
+    /// <summary>
+    /// Returns open tasks for a single project, ordered by end date ascending.
+    /// Used by the dashboard deadline alert loader so alerts and KPIs stay
+    /// scoped to the active project.
+    /// </summary>
+    /// <param name="projectId">The project whose open tasks are wanted.</param>
+    public List<ProjectTask> GetOpenTasksForProject(int projectId)
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT TaskId, ProjectId, Name, StartDate, EndDate, AssigneeId, Status
+            FROM   Tasks
+            WHERE  Status = 'Open' AND ProjectId = $pid
+            ORDER  BY EndDate ASC;
+        ";
+        cmd.Parameters.AddWithValue("$pid", projectId);
         return ReadList(cmd);
     }
 

@@ -21,6 +21,7 @@ public partial class EquipmentForm : Form
         _service = new EquipmentService(factory, _repo);
         InitializeComponent();
         GridStyle.Apply(dgvEquipment);
+        Theme.Apply(this);
         Load += EquipmentForm_Load;
     }
 

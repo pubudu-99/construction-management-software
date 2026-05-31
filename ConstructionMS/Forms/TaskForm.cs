@@ -31,6 +31,7 @@ public partial class TaskForm : Form
 
         InitializeComponent();
         GridStyle.Apply(dgvTasks);
+        Theme.Apply(this);
 
         // FR1.3 — Role-based access: only Managers may create tasks.
         if (!Session.IsManager)
@@ -46,11 +47,11 @@ public partial class TaskForm : Form
 
     private void TaskForm_Load(object? sender, EventArgs e)
     {
-        var project = _projectRepo.GetFirst();
+        var project = _projectRepo.GetActive();
         if (project is null)
         {
-            MessageBox.Show("No project found. Please add a project first.",
-                "No Project", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("No active project. Please create a new project from File > Project Setup.",
+                "No Active Project", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             Close();
             return;
         }
