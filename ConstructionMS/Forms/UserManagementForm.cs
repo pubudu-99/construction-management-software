@@ -21,7 +21,7 @@ public partial class UserManagementForm : Form
     /// <summary>Initialises the form with database access.</summary>
     public UserManagementForm(DbConnectionFactory factory)
     {
-        _service = new UserService(new UserRepository(factory));
+        _service = new UserService(factory, new UserRepository(factory));
         InitializeComponent();
         GridStyle.Apply(dgvUsers);
         Load += UserManagementForm_Load;

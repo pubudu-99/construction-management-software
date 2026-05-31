@@ -150,6 +150,17 @@ public class DatabaseInitializer
 
             CREATE INDEX IF NOT EXISTS idx_movements
                 ON StockMovements(MaterialId, Date);
+
+            CREATE TABLE IF NOT EXISTS ActivityLog (
+                LogId      INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp  TEXT    NOT NULL,
+                Username   TEXT    NOT NULL,
+                Action     TEXT    NOT NULL,
+                Details    TEXT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_activitylog_ts
+                ON ActivityLog(Timestamp DESC);
         ";
 
         cmd.ExecuteNonQuery();

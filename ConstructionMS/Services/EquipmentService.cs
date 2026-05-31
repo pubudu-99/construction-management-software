@@ -1,3 +1,4 @@
+using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
 using ConstructionMS.Models;
 
@@ -8,10 +9,17 @@ namespace ConstructionMS.Services;
 /// </summary>
 public class EquipmentService
 {
+    private readonly DbConnectionFactory _factory;
     private readonly EquipmentRepository _repo;
 
-    /// <summary>Initialises the service with an equipment repository.</summary>
-    public EquipmentService(EquipmentRepository repo) => _repo = repo;
+    /// <summary>Initialises the service with a connection factory and equipment repository.</summary>
+    /// <param name="factory">Connection factory used for audit logging.</param>
+    /// <param name="repo">The repository used to read and write equipment.</param>
+    public EquipmentService(DbConnectionFactory factory, EquipmentRepository repo)
+    {
+        _factory = factory;
+        _repo    = repo;
+    }
 
     /// <summary>
     /// Validates and inserts a new equipment record.
@@ -40,6 +48,7 @@ public class EquipmentService
         item.Status      = newStatus;
         item.CurrentSite = newStatus == "In Use" ? siteName : null;
         _repo.Update(item);
+        ActivityLogger.Log(_factory, "Equipment Status Changed", $"{item.Name} -> {newStatus}");
         return EquipmentResult.Ok();
     }
 

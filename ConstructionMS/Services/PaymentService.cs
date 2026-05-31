@@ -68,6 +68,8 @@ public class PaymentService
             _payments.Insert(conn, tx, p);
             _projects.IncrementSpent(conn, tx, p.ProjectId, p.Amount);
             tx.Commit();
+            ActivityLogger.Log(_factory, "Payment Recorded",
+                $"LKR {p.Amount:N2} to {p.PayeeType} - {p.Reference}");
             return PaymentResult.Ok();
         }
         catch (Exception ex)

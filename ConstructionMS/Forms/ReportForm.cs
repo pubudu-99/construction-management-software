@@ -20,11 +20,13 @@ public partial class ReportForm : Form
     private readonly StockMovementRepository _movRepo;
     private readonly InventoryService        _inventoryService;
     private readonly PayrollCalculator       _calculator;
+    private readonly ActivityLogRepository   _activityRepo;
 
     // Cache last-run data for CSV export.
-    private List<PaymentSummaryLine> _paymentSummary = new();
-    private List<PayrollLine>        _payrollLines   = new();
-    private List<StockStatusLine>    _stockLines     = new();
+    private List<PaymentSummaryLine>          _paymentSummary  = new();
+    private List<PayrollLine>                 _payrollLines    = new();
+    private List<StockStatusLine>             _stockLines      = new();
+    private List<Models.ActivityLogEntry>     _activityEntries = new();
 
     /// <summary>Initialises the form with database access.</summary>
     public ReportForm(DbConnectionFactory factory)
@@ -38,12 +40,14 @@ public partial class ReportForm : Form
         _movRepo          = new StockMovementRepository(factory);
         _inventoryService = new InventoryService(_matRepo, _movRepo);
         _calculator       = new PayrollCalculator();
+        _activityRepo     = new ActivityLogRepository(factory);
 
         InitializeComponent();
 
         GridStyle.Apply(dgvPaymentSummary);
         GridStyle.Apply(dgvPaySummary);
         GridStyle.Apply(dgvStockStatus);
+        GridStyle.Apply(dgvActivityLog);
 
         // Default payroll period: first of this month → today
         dtpPaySumFrom.Value = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -276,11 +280,63 @@ public partial class ReportForm : Form
     /// <summary>Reloads the stock grid from the database.</summary>
     private void BtnRefreshStock_Click(object sender, EventArgs e) => LoadStockTab();
 
-    /// <summary>Reloads the stock tab when the user switches to it.</summary>
+    /// <summary>Reloads the relevant tab when the user switches to it.</summary>
     private void TabReports_SelectedIndexChanged(object sender, EventArgs e)
     {
         if (tabReports.SelectedTab == tabStock)
             LoadStockTab();
+        else if (tabReports.SelectedTab == tabActivity)
+            LoadActivityTab();
+    }
+
+    // ── Tab 4 — Activity Log ──────────────────────────────────────────────────
+
+    /// <summary>Loads the most recent 200 audit-trail entries into the grid.</summary>
+    private void LoadActivityTab()
+    {
+        _activityEntries = _activityRepo.GetRecent(200);
+
+        var rows = _activityEntries
+            .Select(a => new
+            {
+                Timestamp = a.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                a.Username,
+                a.Action,
+                a.Details
+            })
+            .ToList();
+
+        dgvActivityLog.DataSource = rows;
+
+        if (dgvActivityLog.Columns.Count > 0)
+        {
+            if (dgvActivityLog.Columns["Timestamp"] is { } ts) ts.FillWeight = 160;
+            if (dgvActivityLog.Columns["Username"]  is { } un) un.FillWeight = 110;
+            if (dgvActivityLog.Columns["Action"]    is { } ac) ac.FillWeight = 150;
+            if (dgvActivityLog.Columns["Details"]   is { } de) de.FillWeight = 320;
+        }
+    }
+
+    /// <summary>Reloads the activity log from the database.</summary>
+    private void BtnRefreshLog_Click(object sender, EventArgs e) => LoadActivityTab();
+
+    /// <summary>Exports the activity log to a CSV file chosen via SaveFileDialog.</summary>
+    private void BtnExportLog_Click(object sender, EventArgs e)
+    {
+        if (_activityEntries.Count == 0)
+        {
+            MessageBox.Show("No activity to export.", "Export", MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Timestamp,Username,Action,Details");
+        foreach (var a in _activityEntries)
+            sb.AppendLine(
+                $"{a.Timestamp:yyyy-MM-dd HH:mm:ss},{CsvCell(a.Username)},{CsvCell(a.Action)},{CsvCell(a.Details)}");
+
+        SaveCsv($"activity-log-{DateTime.Today:yyyy-MM-dd}.csv", sb.ToString());
     }
 
     // ── CSV Export ────────────────────────────────────────────────────────────

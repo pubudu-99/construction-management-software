@@ -9,6 +9,7 @@ partial class ReportForm
     private TabPage      tabFinancial;
     private TabPage      tabPayroll;
     private TabPage      tabStock;
+    private TabPage      tabActivity;
 
     // ── Tab 1 — Financial Summary ─────────────────────────────────────────────
     private Panel        pnlFinHeader;
@@ -37,6 +38,13 @@ partial class ReportForm
     private Button       btnExportStock;
     private DataGridView dgvStockStatus;
 
+    // ── Tab 4 — Activity Log ──────────────────────────────────────────────────
+    private Panel        pnlActivityHeader;
+    private Label        lblActivityHeading;
+    private Button       btnRefreshLog;
+    private Button       btnExportLog;
+    private DataGridView dgvActivityLog;
+
     protected override void Dispose(bool disposing)
     {
         if (disposing && components != null) components.Dispose();
@@ -49,6 +57,7 @@ partial class ReportForm
         tabFinancial    = new TabPage();
         tabPayroll      = new TabPage();
         tabStock        = new TabPage();
+        tabActivity     = new TabPage();
 
         // Financial tab controls
         pnlFinHeader       = new Panel();
@@ -77,9 +86,17 @@ partial class ReportForm
         btnExportStock     = new Button();
         dgvStockStatus     = new DataGridView();
 
+        // Activity Log tab controls
+        pnlActivityHeader  = new Panel();
+        lblActivityHeading = new Label();
+        btnRefreshLog      = new Button();
+        btnExportLog       = new Button();
+        dgvActivityLog     = new DataGridView();
+
         ((System.ComponentModel.ISupportInitialize)dgvPaymentSummary).BeginInit();
         ((System.ComponentModel.ISupportInitialize)dgvPaySummary).BeginInit();
         ((System.ComponentModel.ISupportInitialize)dgvStockStatus).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)dgvActivityLog).BeginInit();
         SuspendLayout();
 
         // ══════════════════════════════════════════════════════════════════════
@@ -264,11 +281,57 @@ partial class ReportForm
         tabStock.Controls.Add(pnlStockButtons);
 
         // ══════════════════════════════════════════════════════════════════════
+        // TAB 4 — Activity Log
+        // ══════════════════════════════════════════════════════════════════════
+        pnlActivityHeader.Dock      = DockStyle.Top;
+        pnlActivityHeader.Height    = 48;
+        pnlActivityHeader.BackColor = Color.FromArgb(248, 249, 250);
+
+        btnRefreshLog.Text                      = "Refresh";
+        btnRefreshLog.Font                      = new Font("Segoe UI", 9F, FontStyle.Bold);
+        btnRefreshLog.BackColor                 = Color.FromArgb(108, 117, 125);
+        btnRefreshLog.ForeColor                 = Color.White;
+        btnRefreshLog.FlatStyle                 = FlatStyle.Flat;
+        btnRefreshLog.FlatAppearance.BorderSize = 0;
+        btnRefreshLog.Location                  = new Point(16, 10);
+        btnRefreshLog.Size                      = new Size(100, 28);
+        btnRefreshLog.Cursor                    = Cursors.Hand;
+        btnRefreshLog.Click                    += BtnRefreshLog_Click;
+
+        btnExportLog.Text                      = "Export CSV";
+        btnExportLog.Font                      = new Font("Segoe UI", 9F, FontStyle.Bold);
+        btnExportLog.BackColor                 = Color.FromArgb(30, 90, 160);
+        btnExportLog.ForeColor                 = Color.White;
+        btnExportLog.FlatStyle                 = FlatStyle.Flat;
+        btnExportLog.FlatAppearance.BorderSize = 0;
+        btnExportLog.Location                  = new Point(128, 10);
+        btnExportLog.Size                      = new Size(100, 28);
+        btnExportLog.Cursor                    = Cursors.Hand;
+        btnExportLog.Click                    += BtnExportLog_Click;
+
+        lblActivityHeading.Text      = "Recent Activity (last 200 entries)";
+        lblActivityHeading.Font      = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        lblActivityHeading.ForeColor = Color.FromArgb(30, 90, 160);
+        lblActivityHeading.AutoSize  = true;
+        lblActivityHeading.Location  = new Point(248, 16);
+
+        pnlActivityHeader.Controls.AddRange(new Control[] {
+            btnRefreshLog, btnExportLog, lblActivityHeading
+        });
+
+        dgvActivityLog.Dock = DockStyle.Fill;
+
+        tabActivity.Text    = "Activity Log";
+        tabActivity.Padding = new Padding(0);
+        tabActivity.Controls.Add(dgvActivityLog);
+        tabActivity.Controls.Add(pnlActivityHeader);
+
+        // ══════════════════════════════════════════════════════════════════════
         // TAB CONTROL
         // ══════════════════════════════════════════════════════════════════════
         tabReports.Dock     = DockStyle.Fill;
         tabReports.Font     = new Font("Segoe UI", 9.5F);
-        tabReports.Controls.AddRange(new TabPage[] { tabFinancial, tabPayroll, tabStock });
+        tabReports.Controls.AddRange(new TabPage[] { tabFinancial, tabPayroll, tabStock, tabActivity });
         tabReports.SelectedIndexChanged += TabReports_SelectedIndexChanged;
 
         // ── Form ──────────────────────────────────────────────────────────────
@@ -285,6 +348,7 @@ partial class ReportForm
         ((System.ComponentModel.ISupportInitialize)dgvPaymentSummary).EndInit();
         ((System.ComponentModel.ISupportInitialize)dgvPaySummary).EndInit();
         ((System.ComponentModel.ISupportInitialize)dgvStockStatus).EndInit();
+        ((System.ComponentModel.ISupportInitialize)dgvActivityLog).EndInit();
         ResumeLayout(false);
     }
 }

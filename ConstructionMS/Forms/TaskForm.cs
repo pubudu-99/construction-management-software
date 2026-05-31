@@ -27,7 +27,7 @@ public partial class TaskForm : Form
         _taskRepo        = new TaskRepository(factory);
         _projectRepo     = new ProjectRepository(factory);
         _userRepo        = new UserRepository(factory);
-        _scheduleService = new ScheduleService(_taskRepo);
+        _scheduleService = new ScheduleService(factory, _taskRepo);
 
         InitializeComponent();
         GridStyle.Apply(dgvTasks);

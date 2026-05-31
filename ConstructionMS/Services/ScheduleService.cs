@@ -1,3 +1,4 @@
+using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
 using ConstructionMS.Models;
 
@@ -9,10 +10,17 @@ namespace ConstructionMS.Services;
 /// </summary>
 public class ScheduleService
 {
-    private readonly TaskRepository _tasks;
+    private readonly DbConnectionFactory _factory;
+    private readonly TaskRepository      _tasks;
 
-    /// <summary>Initialises the service with a task repository.</summary>
-    public ScheduleService(TaskRepository tasks) => _tasks = tasks;
+    /// <summary>Initialises the service with a connection factory and task repository.</summary>
+    /// <param name="factory">Connection factory used for audit logging.</param>
+    /// <param name="tasks">The repository used to read and write tasks.</param>
+    public ScheduleService(DbConnectionFactory factory, TaskRepository tasks)
+    {
+        _factory = factory;
+        _tasks   = tasks;
+    }
 
     /// <summary>
     /// Validates and inserts a new task.
@@ -35,6 +43,7 @@ public class ScheduleService
             return TaskValidationResult.Fail("Project not set.");
 
         _tasks.Insert(t);
+        ActivityLogger.Log(_factory, "Task Created", t.Name);
         return TaskValidationResult.Ok();
     }
 

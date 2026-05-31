@@ -1,3 +1,4 @@
+using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
 using ConstructionMS.Models;
 
@@ -10,14 +11,21 @@ namespace ConstructionMS.Services;
 /// </summary>
 public class UserService
 {
-    private readonly UserRepository _repo;
+    private readonly DbConnectionFactory _factory;
+    private readonly UserRepository      _repo;
 
     /// <summary>Allowed role values for the application.</summary>
     private static readonly HashSet<string> AllowedRoles =
         new(StringComparer.Ordinal) { "Manager", "Supervisor" };
 
-    /// <summary>Initialises the service with a user repository.</summary>
-    public UserService(UserRepository repo) => _repo = repo;
+    /// <summary>Initialises the service with a connection factory and user repository.</summary>
+    /// <param name="factory">Connection factory used for audit logging.</param>
+    /// <param name="repo">The repository used to read and write users.</param>
+    public UserService(DbConnectionFactory factory, UserRepository repo)
+    {
+        _factory = factory;
+        _repo    = repo;
+    }
 
     /// <summary>
     /// Returns every user in the system, ordered by full name.
@@ -63,6 +71,7 @@ public class UserService
             MustChangePassword = true
         });
 
+        ActivityLogger.Log(_factory, "User Created", $"{username} ({role})");
         return UserResult.Ok();
     }
 

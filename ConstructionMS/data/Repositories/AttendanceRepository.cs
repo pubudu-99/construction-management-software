@@ -48,6 +48,18 @@ public class AttendanceRepository
     }
 
     /// <summary>
+    /// Returns the total number of attendance records in the table.
+    /// Used by the sample-data seeder to stay idempotent.
+    /// </summary>
+    public int CountAll()
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM Attendance;";
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    /// <summary>
     /// Returns attendance records for a worker within the given date range,
     /// ordered by date ascending.
     /// </summary>

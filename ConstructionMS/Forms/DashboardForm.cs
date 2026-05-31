@@ -30,9 +30,10 @@ public partial class DashboardForm : Form
     /// and loads all alert cards in the background.</summary>
     private void DashboardForm_Load(object? sender, EventArgs e)
     {
-        lblWelcome.Text       = $"Welcome, {Session.Current!.FullName}   |   {Session.Current.Role}";
-        btnNavUsers.Visible   = Session.IsManager;
-        btnNavProject.Visible = Session.IsManager;
+        lblWelcome.Text           = $"Welcome, {Session.Current!.FullName}   |   {Session.Current.Role}";
+        btnNavUsers.Visible       = Session.IsManager;
+        btnNavProject.Visible     = Session.IsManager;
+        mnuFileSampleData.Visible = Session.IsManager;
 
         LoadDeadlineAlerts();
         LoadMaintenanceAlerts();
@@ -49,7 +50,7 @@ public partial class DashboardForm : Form
     private void LoadDeadlineAlerts()
     {
         System.Threading.Tasks.Task
-            .Run(() => new ScheduleService(new TaskRepository(_factory)).GetDeadlineAlerts())
+            .Run(() => new ScheduleService(_factory, new TaskRepository(_factory)).GetDeadlineAlerts())
             .ContinueWith(t =>
             {
                 var alerts = t.Result;
@@ -107,7 +108,7 @@ public partial class DashboardForm : Form
     private void LoadMaintenanceAlerts()
     {
         System.Threading.Tasks.Task
-            .Run(() => new EquipmentService(new EquipmentRepository(_factory))
+            .Run(() => new EquipmentService(_factory, new EquipmentRepository(_factory))
                 .GetMaintenanceAlerts())
             .ContinueWith(t =>
             {
@@ -177,8 +178,8 @@ public partial class DashboardForm : Form
 
     // ── Header buttons ────────────────────────────────────────────────────────
 
-    /// <summary>Opens the Change Password dialog.</summary>
-    private void BtnChangePassword_Click(object sender, EventArgs e)
+    /// <summary>Opens the Change Password dialog (File menu).</summary>
+    private void MnuChangePassword_Click(object sender, EventArgs e)
     {
         using var form = new ChangePasswordForm(_factory);
         form.ShowDialog();
@@ -231,6 +232,42 @@ public partial class DashboardForm : Form
     {
         Session.SignOut();
         Close();
+    }
+
+    /// <summary>
+    /// Loads realistic demo data into the database (Manager only).
+    /// Idempotent — safe to run multiple times. Refreshes the alert cards
+    /// afterwards so newly seeded deadlines/maintenance/stock appear.
+    /// </summary>
+    private void MnuFileSampleData_Click(object sender, EventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Load sample demo data into the database?\n" +
+            "This is safe to run multiple times. Continue?",
+            "Load Sample Data",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+
+        if (confirm != DialogResult.Yes) return;
+
+        var seeder = new SampleDataSeeder(
+            _factory,
+            new WorkerRepository(_factory),
+            new AttendanceRepository(_factory),
+            new MaterialRepository(_factory),
+            new EquipmentRepository(_factory),
+            new ContactRepository(_factory),
+            new PaymentRepository(_factory),
+            new TaskRepository(_factory),
+            new ProjectRepository(_factory));
+
+        string result = seeder.LoadSampleData();
+        MessageBox.Show(result, "Sample Data", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+        // Reflect the newly seeded data on the dashboard alert cards.
+        LoadDeadlineAlerts();
+        LoadMaintenanceAlerts();
+        LoadLowStockAlerts();
     }
 
     /// <summary>Shows the About dialog.</summary>
@@ -290,7 +327,7 @@ public partial class DashboardForm : Form
     /// <summary>Opens the Equipment Management form (FR5) and reloads maintenance alerts after close.</summary>
     private void BtnNavEquipment_Click(object sender, EventArgs e)
     {
-        using var form = new EquipmentForm(new EquipmentRepository(_factory));
+        using var form = new EquipmentForm(_factory);
         form.ShowDialog();
         LoadMaintenanceAlerts();
     }

@@ -24,7 +24,7 @@ public partial class LoginForm : Form
     {
         _factory = factory;
         InitializeComponent();
-        _auth = new AuthService(new UserRepository(factory));
+        _auth = new AuthService(factory, new UserRepository(factory));
     }
 
     // ── Event handlers ───────────────────────────────────────────────────────

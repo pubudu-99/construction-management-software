@@ -1,3 +1,4 @@
+using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
 using ConstructionMS.Models;
 using ConstructionMS.Services;
@@ -13,11 +14,11 @@ public partial class EquipmentForm : Form
     private readonly EquipmentService    _service;
     private readonly EquipmentRepository _repo;
 
-    /// <summary>Initialises the form with the given repository.</summary>
-    public EquipmentForm(EquipmentRepository repo)
+    /// <summary>Initialises the form with the given connection factory.</summary>
+    public EquipmentForm(DbConnectionFactory factory)
     {
-        _repo    = repo;
-        _service = new EquipmentService(repo);
+        _repo    = new EquipmentRepository(factory);
+        _service = new EquipmentService(factory, _repo);
         InitializeComponent();
         GridStyle.Apply(dgvEquipment);
         Load += EquipmentForm_Load;

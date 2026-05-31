@@ -8,7 +8,9 @@ partial class DashboardForm
     private MenuStrip          mainMenu;
     private ToolStripMenuItem  mnuFile;
     private ToolStripMenuItem  mnuFileBackup;
+    private ToolStripMenuItem  mnuFileSampleData;
     private ToolStripSeparator mnuFileSep;
+    private ToolStripMenuItem  mnuFileChangePassword;
     private ToolStripMenuItem  mnuFileSignOut;
     private ToolStripMenuItem  mnuHelp;
     private ToolStripMenuItem  mnuHelpAbout;
@@ -16,7 +18,6 @@ partial class DashboardForm
     // ── Header ───────────────────────────────────────────────────────────────
     private Panel  pnlHeader;
     private Label  lblWelcome;
-    private Button btnChangePassword;
     private Button btnSignOut;
 
     // ── Left nav ─────────────────────────────────────────────────────────────
@@ -51,16 +52,17 @@ partial class DashboardForm
     private void InitializeComponent()
     {
         mainMenu        = new MenuStrip();
-        mnuFile         = new ToolStripMenuItem();
-        mnuFileBackup   = new ToolStripMenuItem();
-        mnuFileSep      = new ToolStripSeparator();
-        mnuFileSignOut  = new ToolStripMenuItem();
-        mnuHelp         = new ToolStripMenuItem();
-        mnuHelpAbout    = new ToolStripMenuItem();
+        mnuFile               = new ToolStripMenuItem();
+        mnuFileBackup         = new ToolStripMenuItem();
+        mnuFileSampleData     = new ToolStripMenuItem();
+        mnuFileSep            = new ToolStripSeparator();
+        mnuFileChangePassword = new ToolStripMenuItem();
+        mnuFileSignOut        = new ToolStripMenuItem();
+        mnuHelp               = new ToolStripMenuItem();
+        mnuHelpAbout          = new ToolStripMenuItem();
 
         pnlHeader         = new Panel();
         lblWelcome        = new Label();
-        btnChangePassword = new Button();
         btnSignOut        = new Button();
         pnlMenu           = new Panel();
         btnNavProject     = new Button();
@@ -88,12 +90,18 @@ partial class DashboardForm
         mnuFileBackup.Text   = "Backup Database...";
         mnuFileBackup.Click += MnuFileBackup_Click;
 
+        mnuFileSampleData.Text   = "Load Sample Data...";
+        mnuFileSampleData.Click += MnuFileSampleData_Click;
+
+        mnuFileChangePassword.Text   = "Change Password...";
+        mnuFileChangePassword.Click += MnuChangePassword_Click;
+
         mnuFileSignOut.Text   = "Sign Out";
         mnuFileSignOut.Click += MnuFileSignOut_Click;
 
         mnuFile.Text = "File";
         mnuFile.DropDownItems.AddRange(new ToolStripItem[]
-            { mnuFileBackup, mnuFileSep, mnuFileSignOut });
+            { mnuFileBackup, mnuFileSampleData, mnuFileSep, mnuFileChangePassword, mnuFileSignOut });
 
         mnuHelpAbout.Text   = "About";
         mnuHelpAbout.Click += MnuHelpAbout_Click;
@@ -110,27 +118,14 @@ partial class DashboardForm
         pnlHeader.Height    = 50;
         pnlHeader.BackColor = Color.SteelBlue;
         pnlHeader.Controls.Add(lblWelcome);
-        pnlHeader.Controls.Add(btnChangePassword);
         pnlHeader.Controls.Add(btnSignOut);
 
         lblWelcome.Text      = "";
         lblWelcome.Font      = new Font("Segoe UI", 11F, FontStyle.Bold);
         lblWelcome.ForeColor = Color.White;
         lblWelcome.Location  = new Point(12, 12);
-        lblWelcome.Size      = new Size(680, 26);
+        lblWelcome.Size      = new Size(820, 26);
         lblWelcome.AutoSize  = false;
-
-        btnChangePassword.Text                      = "Change Password";
-        btnChangePassword.Font                      = new Font("Segoe UI", 9F);
-        btnChangePassword.BackColor                 = Color.FromArgb(70, 110, 180);
-        btnChangePassword.ForeColor                 = Color.White;
-        btnChangePassword.FlatStyle                 = FlatStyle.Flat;
-        btnChangePassword.FlatAppearance.BorderSize = 0;
-        btnChangePassword.Size                      = new Size(140, 30);
-        btnChangePassword.Anchor                    = AnchorStyles.Top | AnchorStyles.Right;
-        btnChangePassword.Location                  = new Point(736, 10);
-        btnChangePassword.Cursor                    = Cursors.Hand;
-        btnChangePassword.Click                    += BtnChangePassword_Click;
 
         btnSignOut.Text                      = "Sign Out";
         btnSignOut.Font                      = new Font("Segoe UI", 9F);
@@ -243,6 +238,7 @@ partial class DashboardForm
         ClientSize    = new Size(1000, 600);
         Text          = "Construction Management - Dashboard";
         StartPosition = FormStartPosition.CenterScreen;
+        WindowState   = FormWindowState.Maximized;
         MinimumSize   = new Size(900, 520);
         Font          = new Font("Segoe UI", 9F);
         BackColor     = Color.White;

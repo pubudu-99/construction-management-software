@@ -16,6 +16,7 @@ partial class PayrollForm
     private Label         lblWorkerCount;
     private Label         lblTotalPay;
     private Button        btnExportPayroll;
+    private Button        btnPrintReceipt;
 
     // ── Right panel — report grid ─────────────────────────────────────────────
     private Panel         pnlRight;
@@ -41,6 +42,7 @@ partial class PayrollForm
         lblWorkerCount   = new Label();
         lblTotalPay      = new Label();
         btnExportPayroll = new Button();
+        btnPrintReceipt  = new Button();
         pnlRight         = new Panel();
         lblReportTitle   = new Label();
         dgvPayroll       = new DataGridView();
@@ -144,6 +146,19 @@ partial class PayrollForm
         btnExportPayroll.Size                      = new Size(fw, 32);
         btnExportPayroll.Cursor                    = Cursors.Hand;
         btnExportPayroll.Click                    += BtnExportPayroll_Click;
+        y += 40;
+
+        btnPrintReceipt.Text                      = "Print Receipt";
+        btnPrintReceipt.Font                      = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        btnPrintReceipt.BackColor                 = Color.FromArgb(30, 90, 160);
+        btnPrintReceipt.ForeColor                 = Color.White;
+        btnPrintReceipt.FlatStyle                 = FlatStyle.Flat;
+        btnPrintReceipt.FlatAppearance.BorderSize = 0;
+        btnPrintReceipt.Location                  = new Point(lx, y);
+        btnPrintReceipt.Size                      = new Size(fw, 32);
+        btnPrintReceipt.Cursor                    = Cursors.Hand;
+        btnPrintReceipt.Enabled                   = false;
+        btnPrintReceipt.Click                    += BtnPrintReceipt_Click;
 
         pnlLeft.Controls.AddRange(new Control[] {
             lblFormTitle,
@@ -152,7 +167,7 @@ partial class PayrollForm
             btnGenerate,
             divider,
             lblSummaryHeading, lblWorkerCount, lblTotalPay,
-            btnExportPayroll
+            btnExportPayroll, btnPrintReceipt
         });
 
         // ══════════════════════════════════════════════════════════════════════
@@ -184,6 +199,7 @@ partial class PayrollForm
         dgvPayroll.EnableHeadersVisualStyles   = false;
         dgvPayroll.RowTemplate.Height          = 26;
         dgvPayroll.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 248, 255);
+        dgvPayroll.SelectionChanged           += DgvPayroll_SelectionChanged;
 
         pnlRight.Controls.Add(dgvPayroll);
         pnlRight.Controls.Add(lblReportTitle);

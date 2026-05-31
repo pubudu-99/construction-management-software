@@ -29,7 +29,7 @@ public partial class ChangePasswordForm : Form
     /// <param name="factory">Database connection factory.</param>
     public ChangePasswordForm(DbConnectionFactory factory)
     {
-        _auth = new AuthService(new UserRepository(factory));
+        _auth = new AuthService(factory, new UserRepository(factory));
         InitializeComponent();
     }
 
@@ -43,7 +43,7 @@ public partial class ChangePasswordForm : Form
     /// <param name="factory">Database connection factory.</param>
     public ChangePasswordForm(User user, DbConnectionFactory factory)
     {
-        _auth       = new AuthService(new UserRepository(factory));
+        _auth       = new AuthService(factory, new UserRepository(factory));
         _forcedUser = user;
         InitializeComponent();
         // Override the subtitle set by InitializeComponent (Session.Current may be unset here).

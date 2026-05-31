@@ -1,4 +1,5 @@
 using System.Text;
+using System.Drawing.Printing;
 using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
 using ConstructionMS.Services;
@@ -55,6 +56,7 @@ public partial class PayrollForm : Form
             lblTotalPay.Text         = "Gross Pay:   LKR 0.00";
             lblReportTitle.Text      = "Payroll Report — no active workers";
             _lines = new();
+            btnPrintReceipt.Enabled  = false;
             return;
         }
 
@@ -130,6 +132,41 @@ public partial class PayrollForm : Form
         File.WriteAllText(dlg.FileName, sb.ToString(), Encoding.UTF8);
         MessageBox.Show($"Exported to:\n{dlg.FileName}", "Export Complete",
             MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    // ── Print receipt ─────────────────────────────────────────────────────────
+
+    /// <summary>Enables the Print Receipt button only when a worker row is selected.</summary>
+    private void DgvPayroll_SelectionChanged(object? sender, EventArgs e)
+    {
+        btnPrintReceipt.Enabled = _lines.Count > 0 && dgvPayroll.SelectedRows.Count > 0;
+    }
+
+    /// <summary>
+    /// Builds a printable payslip for the selected worker and shows a print
+    /// preview, from which the user can print or save as PDF
+    /// ("Microsoft Print to PDF").
+    /// </summary>
+    private void BtnPrintReceipt_Click(object? sender, EventArgs e)
+    {
+        if (dgvPayroll.SelectedRows.Count == 0) return;
+
+        string workerName = dgvPayroll.SelectedRows[0].Cells["Worker"]?.Value?.ToString() ?? "";
+        var line = _lines.FirstOrDefault(l => l.WorkerName == workerName);
+        if (line is null) return;
+
+        // PayrollLine carries no rate — resolve it from the worker record.
+        var worker = _workerRepo.GetActive().FirstOrDefault(w => w.WorkerId == line.WorkerId);
+        decimal rate = worker?.HourlyRate ?? 0m;
+
+        var printer = new PayrollReceiptPrinter(
+            line.WorkerName, dtpFrom.Value.Date, dtpTo.Value.Date,
+            line.RegularHours, line.OvertimeHours,
+            rate, AppConfig.OvertimeMultiplier, line.TotalPay);
+
+        using var doc     = printer.Build();
+        using var preview = new PrintPreviewDialog { Document = doc, Width = 820, Height = 640 };
+        preview.ShowDialog(this);
     }
 
     /// <summary>Wraps a CSV cell in quotes if it contains a comma or quote.</summary>

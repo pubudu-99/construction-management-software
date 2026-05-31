@@ -1,3 +1,4 @@
+using ConstructionMS.Data;
 using ConstructionMS.Data.Repositories;
 using ConstructionMS.Models;
 
@@ -9,15 +10,18 @@ namespace ConstructionMS.Services;
 /// </summary>
 public class AuthService
 {
-    private readonly UserRepository _users;
+    private readonly DbConnectionFactory _factory;
+    private readonly UserRepository      _users;
 
     /// <summary>
-    /// Initialises the service with a user repository.
+    /// Initialises the service with a connection factory and user repository.
     /// </summary>
+    /// <param name="factory">Connection factory used for audit logging.</param>
     /// <param name="users">The repository used to look up users.</param>
-    public AuthService(UserRepository users)
+    public AuthService(DbConnectionFactory factory, UserRepository users)
     {
-        _users = users;
+        _factory = factory;
+        _users   = users;
     }
 
     /// <summary>
@@ -43,7 +47,11 @@ public class AuthService
         // BCrypt.Verify compares the plain-text password against the stored hash.
         bool passwordValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
 
-        return passwordValid ? user : null;
+        if (!passwordValid)
+            return null;
+
+        ActivityLogger.Log(_factory, "Sign In", $"User {username} signed in");
+        return user;
     }
 
     /// <summary>
