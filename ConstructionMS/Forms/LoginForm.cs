@@ -102,9 +102,20 @@ public partial class LoginForm : Form
         //   • Sign Out clears Session.Current → return to the login screen.
         //   • Closing via the window X leaves the session set → exit the app.
         if (Session.Current is null)
+        {
+            // Reset the form for the next user — leaving the previous
+            // username (or a stale error message) on screen invites the
+            // next person to log in under the wrong account.
+            txtUsername.Clear();
+            txtPassword.Clear();
+            lblError.Visible = false;
             Show();
+            txtUsername.Focus();
+        }
         else
+        {
             Close();   // LoginForm is the main form, so this exits the application
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

@@ -102,6 +102,40 @@ public class TaskRepository
         cmd.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Loads a single task by its primary key.
+    /// </summary>
+    /// <param name="taskId">The task ID to find.</param>
+    /// <returns>The matching <see cref="ProjectTask"/>, or <c>null</c> if not found.</returns>
+    public ProjectTask? GetById(int taskId)
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT TaskId, ProjectId, Name, StartDate, EndDate, AssigneeId, Status
+            FROM   Tasks
+            WHERE  TaskId = $id
+            LIMIT  1;
+        ";
+        cmd.Parameters.AddWithValue("$id", taskId);
+
+        using var rd = cmd.ExecuteReader();
+        return rd.Read() ? MapRow(rd) : null;
+    }
+
+    /// <summary>
+    /// Permanently removes a task row.
+    /// </summary>
+    /// <param name="taskId">The task to delete.</param>
+    public void Delete(int taskId)
+    {
+        using var conn = _factory.Open();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM Tasks WHERE TaskId = $id;";
+        cmd.Parameters.AddWithValue("$id", taskId);
+        cmd.ExecuteNonQuery();
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private static List<ProjectTask> ReadList(SqliteCommand cmd)

@@ -1,4 +1,3 @@
-using BCrypt.Net;
 using Microsoft.Data.Sqlite;
 
 namespace ConstructionMS.Data;

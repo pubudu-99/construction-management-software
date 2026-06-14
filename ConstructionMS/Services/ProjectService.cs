@@ -16,11 +16,6 @@ public class ProjectService
     public ProjectService(ProjectRepository repo) => _repo = repo;
 
     /// <summary>
-    /// Returns the current (first) project, or <c>null</c> if none exists.
-    /// </summary>
-    public Project? GetCurrent() => _repo.GetFirst();
-
-    /// <summary>
     /// Validates and saves changes to an existing project.
     /// Rules: name required; budget greater than zero; budget not below the
     /// amount already spent; end date after start date.

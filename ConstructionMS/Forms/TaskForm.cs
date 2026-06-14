@@ -33,10 +33,13 @@ public partial class TaskForm : Form
         GridStyle.Apply(dgvTasks);
         Theme.Apply(this);
 
-        // FR1.3 — Role-based access: only Managers may create tasks.
+        // FR1.3 — Role-based access: only Managers may create or delete tasks.
+        // Supervisors can still view the list and mark tasks complete (that
+        // is operational work, not a management decision).
         if (!Session.IsManager)
         {
             btnSaveTask.Enabled = false;
+            menuDelete.Enabled  = false;
             ShowStatus("Manager access required for creating tasks.", success: false);
         }
 
@@ -221,15 +224,37 @@ public partial class TaskForm : Form
         LoadTasks();
     }
 
-    /// <summary>Confirms then reloads (delete wired in a later module).</summary>
+    /// <summary>
+    /// Confirms then permanently deletes the selected task via ScheduleService.
+    /// Manager-only — the menu item is disabled for Supervisors, and this
+    /// handler re-checks the role as a second line of defence.
+    /// </summary>
     private void MenuDelete_Click(object? sender, EventArgs e)
     {
-        if (!TryGetSelectedTaskId(out _)) return;
+        if (!Session.IsManager)
+        {
+            ShowStatus("Manager access required for deleting tasks.", success: false);
+            return;
+        }
+
+        if (!TryGetSelectedTaskId(out int id)) return;
+
         var confirm = MessageBox.Show(
-            "Delete this task?", "Confirm Delete",
+            "Delete this task? This cannot be undone.", "Confirm Delete",
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-        if (confirm == DialogResult.Yes)
-            LoadTasks();
+        if (confirm != DialogResult.Yes) return;
+
+        var result = _scheduleService.DeleteTask(id);
+
+        if (!result.Success)
+        {
+            ShowStatus(result.Message, success: false);
+            LoadTasks();   // refresh in case the task vanished underneath us
+            return;
+        }
+
+        ShowStatus("Task deleted.", success: true);
+        LoadTasks();
     }
 
     private bool TryGetSelectedTaskId(out int id)

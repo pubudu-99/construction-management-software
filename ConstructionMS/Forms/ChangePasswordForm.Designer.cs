@@ -52,7 +52,9 @@ partial class ChangePasswordForm
         lblTitle.Size      = new Size(fw, 28);
         y += 32;
 
-        lblSubtitle.Text      = $"Changing password for:  {ConstructionMS.Services.Session.Current?.FullName ?? ""}";
+        // Text is set by the constructors (from Session or the forced-login user)
+        // so the Designer never reads session state.
+        lblSubtitle.Text      = "";
         lblSubtitle.Font      = new Font("Segoe UI", 8.5F, FontStyle.Italic);
         lblSubtitle.ForeColor = Color.Gray;
         lblSubtitle.Location  = new Point(lx, y);

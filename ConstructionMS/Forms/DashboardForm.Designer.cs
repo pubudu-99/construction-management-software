@@ -20,7 +20,6 @@ partial class DashboardForm
     private Label  lblAppTitle;
     private Label  lblAppSub;
     private Label  lblWelcome;
-    private Button btnSignOut;
 
     // ── Left nav ─────────────────────────────────────────────────────────────
     private Panel  pnlMenu;
@@ -78,7 +77,6 @@ partial class DashboardForm
         lblAppTitle       = new Label();
         lblAppSub         = new Label();
         lblWelcome        = new Label();
-        btnSignOut        = new Button();
         pnlMenu           = new Panel();
         btnNavProject     = new Button();
         btnNavPayments    = new Button();
@@ -137,6 +135,8 @@ partial class DashboardForm
         pnlHeader.Dock      = DockStyle.Top;
         pnlHeader.Height    = 64;
         pnlHeader.BackColor = Theme.Brand;
+        // Padding frames the right-docked welcome label and Sign Out button.
+        pnlHeader.Padding   = new Padding(0, 16, 14, 16);
 
         lblAppTitle.Text      = "Construction Manager";
         lblAppTitle.Font      = new Font("Segoe UI", 14F, FontStyle.Bold);
@@ -150,22 +150,21 @@ partial class DashboardForm
         lblAppSub.AutoSize  = true;
         lblAppSub.Location  = new Point(20, 38);
 
+        // Welcome label is DOCKED right (not anchored): dock layout is
+        // recomputed on every resize, so it stays visible at any window
+        // width, DPI, or start-maximized state. Anchoring here previously
+        // captured offsets against the panel's pre-layout width and pushed
+        // the control off-screen on maximized startup.
+        // Sign-out lives in the File menu — no header button needed.
         lblWelcome.Text      = "";
         lblWelcome.Font      = new Font("Segoe UI", 10F, FontStyle.Bold);
         lblWelcome.ForeColor = Color.White;
         lblWelcome.TextAlign = ContentAlignment.MiddleRight;
         lblWelcome.AutoSize  = false;
-        lblWelcome.Size      = new Size(380, 24);
-        lblWelcome.Anchor    = AnchorStyles.Top | AnchorStyles.Right;
-        lblWelcome.Location  = new Point(1000 - 380 - 116, 20);
+        lblWelcome.Width     = 480;
+        lblWelcome.Dock      = DockStyle.Right;
 
-        btnSignOut.Text     = "Sign Out";
-        btnSignOut.Size     = new Size(96, 32);
-        btnSignOut.Anchor   = AnchorStyles.Top | AnchorStyles.Right;
-        btnSignOut.Location = new Point(1000 - 108, 16);
-        btnSignOut.Click   += BtnSignOut_Click;
-
-        pnlHeader.Controls.AddRange(new Control[] { lblAppTitle, lblAppSub, lblWelcome, btnSignOut });
+        pnlHeader.Controls.AddRange(new Control[] { lblAppTitle, lblAppSub, lblWelcome });
 
         // ── Left nav ──────────────────────────────────────────────────────────
         pnlMenu.Dock       = DockStyle.Left;

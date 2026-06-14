@@ -50,6 +50,25 @@ public class ScheduleService
     }
 
     /// <summary>
+    /// Permanently deletes a task and records the action in the activity log.
+    /// </summary>
+    /// <param name="taskId">The task to delete.</param>
+    /// <returns>
+    /// <see cref="TaskValidationResult.Ok"/> on success, or
+    /// <see cref="TaskValidationResult.Fail"/> when the task no longer exists.
+    /// </returns>
+    public TaskValidationResult DeleteTask(int taskId)
+    {
+        var task = _tasks.GetById(taskId);
+        if (task is null)
+            return TaskValidationResult.Fail("Task not found — it may already be deleted.");
+
+        _tasks.Delete(taskId);
+        ActivityLogger.Log(_factory, "Task Deleted", task.Name);
+        return TaskValidationResult.Ok();
+    }
+
+    /// <summary>
     /// Returns alerts for the active project's open tasks due within 3 days
     /// (or overdue). Returns an empty list when no project is active so the
     /// dashboard never shows a completed project's stale deadlines.

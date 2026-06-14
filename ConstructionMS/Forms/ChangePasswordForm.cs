@@ -31,6 +31,9 @@ public partial class ChangePasswordForm : Form
     {
         _auth = new AuthService(factory, new UserRepository(factory));
         InitializeComponent();
+        // Set here (not in the Designer) so the subtitle always reflects the
+        // user who is signed in at the moment the dialog opens.
+        lblSubtitle.Text = $"Changing password for:  {Session.Current?.FullName ?? ""}";
         Theme.Apply(this);
     }
 
@@ -47,7 +50,8 @@ public partial class ChangePasswordForm : Form
         _auth       = new AuthService(factory, new UserRepository(factory));
         _forcedUser = user;
         InitializeComponent();
-        // Override the subtitle set by InitializeComponent (Session.Current may be unset here).
+        // Use the passed-in user directly — Session.Current may be unset
+        // during the forced first-login flow.
         lblSubtitle.Text = $"Changing password for:  {user.FullName}";
         Theme.Apply(this);
     }

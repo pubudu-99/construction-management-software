@@ -22,9 +22,6 @@ public partial class DashboardForm : Form
         _factory = factory;
         InitializeComponent();
 
-        // Sign Out reads as a light button on the brand-coloured header.
-        Theme.StyleButton(btnSignOut, Theme.ButtonRole.Secondary);
-
         // Keep KPI row heights correct if the window moves to a different-DPI monitor.
         DpiChanged += (_, _) => SizeKpiRows();
 
@@ -37,6 +34,23 @@ public partial class DashboardForm : Form
     /// and loads all alert cards in the background.</summary>
     private void DashboardForm_Load(object? sender, EventArgs e)
     {
+        ApplyRoleUi();
+
+        SizeKpiRows();
+        LoadKpis();
+        LoadDeadlineAlerts();
+        LoadMaintenanceAlerts();
+        LoadLowStockAlerts();
+    }
+
+    /// <summary>
+    /// Renders everything that depends on the signed-in user: the welcome
+    /// header and the role-gated nav/menu items. Called at load and again
+    /// whenever the current user's details may have changed (e.g. after
+    /// editing users), so the header never shows stale information.
+    /// </summary>
+    private void ApplyRoleUi()
+    {
         lblWelcome.Text           = $"Welcome, {Session.Current!.FullName}   ·   {Session.Current.Role}";
         btnNavUsers.Visible       = Session.IsManager;
         btnNavProject.Visible     = Session.IsManager;
@@ -46,12 +60,30 @@ public partial class DashboardForm : Form
         // Re-flow the nav so hidden Manager-only items leave no gaps and the
         // empty ADMIN section caption disappears for Supervisors.
         CollapseNav();
+    }
 
-        SizeKpiRows();
-        LoadKpis();
-        LoadDeadlineAlerts();
-        LoadMaintenanceAlerts();
-        LoadLowStockAlerts();
+    /// <summary>
+    /// Re-reads the signed-in user's row from the database and refreshes the
+    /// in-memory session plus the header. Covers the case where a Manager
+    /// edits their own Full Name or Role in User Management — without this,
+    /// the welcome header keeps showing the old details until re-login.
+    /// </summary>
+    private void RefreshSessionFromDatabase()
+    {
+        if (Session.Current is null) return;
+
+        var fresh = new UserRepository(_factory)
+            .GetAll()
+            .FirstOrDefault(u => u.UserId == Session.Current.UserId);
+        if (fresh is null) return;
+
+        // Update the existing session object in place so every reference
+        // (forms already holding Session.Current) sees the new values.
+        Session.Current.FullName = fresh.FullName;
+        Session.Current.Role     = fresh.Role;
+        Session.Current.IsActive = fresh.IsActive;
+
+        ApplyRoleUi();
     }
 
     /// <summary>
@@ -96,7 +128,9 @@ public partial class DashboardForm : Form
 
     /// <summary>Snapshot of dashboard metrics gathered on a background thread.</summary>
     private sealed record KpiData(
-        bool HasProject, string ProjectName, decimal Budget, decimal Spent,
+        bool HasProject, string ProjectName, string ProjectStatus,
+        DateTime ProjectStart, DateTime ProjectEnd,
+        decimal Budget, decimal Spent,
         int ActiveWorkers, int OpenTasks, int OverdueTasks, int LowStock, int MaintenanceDue);
 
     /// <summary>
@@ -126,6 +160,9 @@ public partial class DashboardForm : Form
                 return new KpiData(
                     project is not null,
                     project?.Name ?? "",
+                    project?.Status ?? "",
+                    project?.StartDate ?? DateTime.MinValue,
+                    project?.EndDate ?? DateTime.MinValue,
                     project?.Budget ?? 0m,
                     project?.Spent ?? 0m,
                     workers, open, overdue, lowStock, maint);
@@ -145,6 +182,21 @@ public partial class DashboardForm : Form
         Text = k.HasProject
             ? $"Construction Management - {k.ProjectName}"
             : "Construction Management - Dashboard";
+
+        // The blue header is dynamic too: the big title is the active
+        // project, and the subtitle shows its status and timeline. Falls
+        // back to the application name when no project is active.
+        if (k.HasProject)
+        {
+            lblAppTitle.Text = k.ProjectName;
+            lblAppSub.Text   =
+                $"{k.ProjectStatus}   ·   {k.ProjectStart:dd MMM yyyy} – {k.ProjectEnd:dd MMM yyyy}";
+        }
+        else
+        {
+            lblAppTitle.Text = "Construction Manager";
+            lblAppSub.Text   = "No active project — create one in Project Setup";
+        }
 
         tlpKpiRow1.SuspendLayout();
         tlpKpiRow2.SuspendLayout();
@@ -418,13 +470,6 @@ public partial class DashboardForm : Form
         form.ShowDialog();
     }
 
-    /// <summary>Signs the user out and closes the dashboard (header button).</summary>
-    private void BtnSignOut_Click(object sender, EventArgs e)
-    {
-        Session.SignOut();
-        Close();
-    }
-
     // ── Menu handlers ─────────────────────────────────────────────────────────
 
     /// <summary>
@@ -600,6 +645,10 @@ public partial class DashboardForm : Form
     {
         using var form = new UserManagementForm(_factory);
         form.ShowDialog();
+
+        // The Manager may have edited their own name or role — refresh the
+        // session and header so the change is visible immediately.
+        RefreshSessionFromDatabase();
     }
 
     /// <summary>Opens the Worker Management form. Managers only.</summary>

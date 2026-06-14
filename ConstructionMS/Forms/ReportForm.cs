@@ -185,9 +185,6 @@ public partial class ReportForm : Form
         }
     }
 
-    /// <summary>Applies italic style to the Total row if added, no-op here.</summary>
-    private void DgvPaymentSummary_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e) { }
-
     // ── Tab 2 — Payroll Summary ───────────────────────────────────────────────
 
     /// <summary>Generates the payroll report for the selected date range.</summary>

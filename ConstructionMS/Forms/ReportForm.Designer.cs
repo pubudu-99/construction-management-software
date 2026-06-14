@@ -193,7 +193,6 @@ partial class ReportForm
         });
 
         dgvPaymentSummary.Dock        = DockStyle.Fill;
-        dgvPaymentSummary.CellFormatting += DgvPaymentSummary_CellFormatting;
 
         tabFinancial.Text    = "Financial Summary";
         tabFinancial.Padding = new Padding(0);
